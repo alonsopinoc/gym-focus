@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Valley+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens: "Iron & Amethyst" ─────────────────────────────────────────
+   Inspirado en el gimnasio de fuerza real: hierro, tiza, y el violeta que ya
+   marcaba los superseries — ahora es el color de toda la marca.
+   Cambia aquí para modificar toda la app de una sola vez.
+   Light mode por defecto, dark mode en [.dark] */
+
+@layer base {
+  :root {
+    --color-bg:          246 247 249;   /* chalk frío */
+    --color-surface:     255 255 255;   /* white, sobre chalk */
+    --color-surface-2:   237 239 242;   /* ash fría */
+    --color-border:      223 226 231;   /* ash oscurecida fría */
+    --color-text:         30  32  38;   /* graphite frío */
+    --color-text-muted:  113 118 128;   /* grey frío */
+    --color-primary:      37  99 235;   /* azul Fuerza */
+    --color-primary-hover: 29  78 216;  /* azul Fuerza oscuro */
+    --color-primary-soft: 219 234 254;  /* azul Fuerza muy suave */
+    --color-primary-text:  30  58 138;  /* azul Fuerza oscuro para texto */
+    --color-danger:      196  48  43;   /* rojo hierro oxidado */
+    --color-warning:     191 138  17;   /* plate yellow oscurecido para AA */
+    --color-info:         62 110 142;   /* steel */
+    --color-purple:      124  38 200;   /* violeta — superseries */
+  }
+
+  .dark {
+    --color-bg:           24  26  31;   /* graphite frío */
+    --color-surface:      34  37  43;   /* iron frío */
+    --color-surface-2:    43  46  53;   /* iron claro frío */
+    --color-border:       58  62  70;
+    --color-text:        237 239 242;   /* chalk frío */
+    --color-text-muted:  148 152 161;
+    --color-primary:      96 165 250;   /* azul Fuerza, más vivo en oscuro */
+    --color-primary-hover: 59 130 246;
+    --color-primary-soft:  23  37  84;
+    --color-primary-text: 191 219 254;
+    --color-danger:      224  92  82;
+    --color-warning:     232 178  46;
+    --color-info:         92 152 190;
+    --color-purple:      176 122 235;   /* violeta — superseries */
+  }
+
+  body {
+    background-color: rgb(var(--color-bg));
+    color: rgb(var(--color-text));
+    font-family: 'Valley Sans', ui-sans-serif, system-ui, sans-serif;
+    /* Evita zoom al tocar inputs en iOS */
+    -webkit-text-size-adjust: 100%;
+    /* Scroll suave nativo en iOS */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: 'Valley Sans', ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .font-display-num {
+    font-family: 'Valley Sans', ui-sans-serif, system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+  }
+
+  /* Elimina delay de 300ms en tap en toda la app */
+  * {
+    touch-action: manipulation;
+  }
+
+  /* Evita selección de texto accidental al tocar */
+  button, a, [role="button"] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Safe area para notch/Dynamic Island */
+  #root {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Contenido principal deja espacio para NavBar mobile + home indicator */
+  .main-scroll-area {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  }
+
+  @media (min-width: 768px) {
+    .main-scroll-area {
+      padding-bottom: 0;
+    }
+  }
+
+  /* Scrollbar delgada y moderna en toda la app */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--color-border)) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: rgb(var(--color-border));
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(var(--color-text-muted));
+  }
+}

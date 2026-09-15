@@ -1,0 +1,131 @@
+/* Estilo general del contenedor del calendario */
+.react-calendar {
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+}
+
+/* Navegación (mes, año, flechas) */
+.react-calendar__navigation {
+  display: flex;
+  height: 44px;
+  margin-bottom: 1em;
+}
+
+.react-calendar__navigation button {
+  min-width: 44px;
+  background: none;
+  color: inherit; /* Hereda el color del texto */
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+/* Etiqueta del mes y año (para evitar que sea demasiado grande) */
+.react-calendar__navigation__label {
+  font-size: 1rem !important; /* Reducimos el tamaño de la fuente */
+  font-weight: 600 !important; /* Hacemos la fuente un poco menos gruesa */
+}
+
+.dark .react-calendar__navigation button:hover {
+  background-color: #3f3f46; /* dark:bg-neutral-700 */
+}
+.light .react-calendar__navigation button:hover {
+  background-color: #e5e5e5; /* light:bg-neutral-200 */
+}
+
+.react-calendar__navigation button:disabled {
+  color: #52525b; /* neutral-600 */
+  cursor: not-allowed;
+}
+
+/* Vista de mes: días de la semana */
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: 600; /* semibold */
+  font-size: 0.7rem; /* un poco más pequeño */
+  color: #a3a3a3; /* neutral-400 */
+  padding-bottom: 0.75rem; /* 12px */
+  margin-bottom: 0.5rem; /* 8px */
+  border-bottom: 1px solid #e5e5e5; /* Borde para modo claro */
+}
+
+/* Contenedor de los días, para el truco de la cuadrícula */
+.react-calendar__month-view__days {
+  /* Tira de los bordes de las celdas para que se solapen */
+  margin: -1px; 
+}
+
+/* Estilo de los días (tiles) */
+.react-calendar__tile {
+  max-width: 100%;
+  height: 6rem; /* 96px - Esto fuerza una altura uniforme */
+  padding: 0.5rem; /* 8px */
+  background: none;
+  text-align: center;
+  line-height: 16px;
+  color: inherit; /* Hereda el color del texto */
+  border: 1px solid #e5e5e5; /* Borde para modo claro */
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dark .react-calendar__tile:hover {
+  background-color: #3f3f46; /* dark:bg-neutral-700 */
+}
+.light .react-calendar__tile:hover {
+  background-color: #d4d4d4; /* light:bg-neutral-300 */
+}
+
+/* Ajusta el color del borde para el modo oscuro */
+.dark .react-calendar__tile {
+  border-color: #3f3f46; /* dark:border-neutral-700 */
+}
+
+/* Ajusta el color del borde de los días de la semana para el modo oscuro */
+.dark .react-calendar__month-view__weekdays {
+  border-color: #3f3f46; /* dark:border-neutral-700 */
+}
+
+/* Día actual */
+.dark .react-calendar__tile--now {
+  background: #27272a; /* dark:bg-neutral-800 */
+  border: 2px solid #52525b; /* dark:border-neutral-600 */
+}
+.light .react-calendar__tile--now {
+  background: #f5f5f5; /* light:bg-neutral-100 */
+  border: 2px solid #d4d4d4; /* light:border-neutral-300 */
+  /* Asegura que el texto del día actual sea visible en modo claro */
+  color: #171717; /* neutral-900 */ 
+}
+
+/* Día seleccionado */
+.react-calendar__tile--active {
+  background: #10b981; /* emerald-500 */
+  color: white;
+}
+.react-calendar__tile--active:hover {
+  background: #059669; /* emerald-600 */
+}
+
+/* Días de meses vecinos */
+.react-calendar__month-view__days__day--neighboringMonth {
+  color: #737373; /* neutral-500 */
+}
+
+/* Estilos para la versión compacta del calendario (en modales) */
+.compact-calendar .react-calendar__tile {
+  height: auto; /* Altura automática */
+  padding: 0.5rem 0.25rem; /* Menos padding vertical */
+  font-size: 0.8rem;
+}
+
+.compact-calendar .react-calendar__navigation button {
+  font-size: 1rem;
+  min-width: 32px;
+}

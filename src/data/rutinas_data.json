@@ -1,0 +1,1220 @@
+[
+  {
+    "id": "F_1",
+    "tipo": "F",
+    "titulo": "Fuerza Día 1",
+    "descripcion": "4 series de cada ejercicio. Descansos 30-60s. Prioridad: Técnica.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Sentadilla con Pesa Rusa (Rack)",
+        "reps": "10-12 por lado",
+        "series": 4,
+        "imagen_preview": "f1_sentadilla_rack",
+        "video_url": "https://youtu.be/BpRIy9tOfNk",
+        "nota": "Si hacerla a profundidad atenta contra la ejecución, no llegar a fondo. Pesa pegada al cuerpo.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Pesa Rusa Dead Clean",
+        "reps": "7-10 por lado",
+        "series": 3,
+        "imagen_preview": "f1_dead_clean",
+        "video_url": "https://youtu.be/41jM_up-UTM",
+        "nota": "Movimiento explosivo y controlado (Ej. extra 3 series).",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Flexiones Diamante",
+        "reps": "Al fallo",
+        "series": 4,
+        "imagen_preview": "f1_flexion_diamante",
+        "video_url": null,
+        "nota": "Varía la posición de manos de la más difícil a la más fácil.",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Chin Up (Dominadas)",
+        "reps": "3-4 reps (10 series intercaladas)",
+        "series": 10,
+        "imagen_preview": "f1_chinup",
+        "video_url": null,
+        "nota": "Intercalar series durante la rutina para recuperarse y mantener el número de reps.",
+        "es_timer": false
+      },
+      {
+        "orden": 5,
+        "nombre": "Plancha con toques",
+        "reps": "Al fallo",
+        "series": 4,
+        "imagen_preview": "f1_plancha_toques",
+        "video_url": null,
+        "nota": "Con codos apoyados, alternando levantar una pierna, tocar hombros, etc.",
+        "es_timer": false
+      },
+      {
+        "orden": 6,
+        "nombre": "Fondos en Paralelas",
+        "reps": "20 reps",
+        "series": 4,
+        "imagen_preview": "f1_fondos",
+        "video_url": null,
+        "nota": "Usa banda elástica o asistencia si es necesario.",
+        "es_timer": false
+      },
+      {
+        "orden": 7,
+        "nombre": "Antirrotación (Pallof Press)",
+        "reps": "Máximas",
+        "series": 3,
+        "imagen_preview": "f1_antirrotacion",
+        "video_url": null,
+        "nota": "Con banda elástica.",
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "F_2",
+    "tipo": "F",
+    "titulo": "Fuerza Día 2",
+    "descripcion": "Descansos mínimos (30-60s). Orden establecido, no circuito. Cuidar postura en Búlgara.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Sentadilla Búlgara con Pesa Rusa",
+        "reps": "Máximas (Repetir número)",
+        "series": 4,
+        "imagen_preview": "f2_bulgara",
+        "video_url": null,
+        "nota": "Suspendida con la mano correspondiente a la pierna. Cuidar postura del tronco.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Swing (Extra)",
+        "reps": "Máximas",
+        "series": 3,
+        "imagen_preview": "f2_swing",
+        "video_url": "https://www.youtube.com/shorts/ao4TqSb0zxQ",
+        "nota": "Descanso mínimo.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Flexiones de Brazos",
+        "reps": "Al fallo",
+        "series": 4,
+        "imagen_preview": "f2_flexiones",
+        "video_url": null,
+        "nota": "Horizontales, normales.",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Rodillas al Pecho (Suspendido)",
+        "reps": "Al fallo",
+        "series": 4,
+        "imagen_preview": "f2_rodillas_pecho",
+        "video_url": "https://www.youtube.com/shorts/ao4TqSb0zxQ",
+        "nota": "Se puede intercalar (ver sugerencias en descripción).",
+        "es_timer": false
+      },
+      {
+        "orden": 5,
+        "nombre": "Dominadas",
+        "reps": "7-10 reps",
+        "series": 4,
+        "imagen_preview": "f2_dominadas",
+        "video_url": null,
+        "nota": "Al máximo sin bandas, luego completar con bandas.",
+        "es_timer": false
+      },
+      {
+        "orden": 6,
+        "nombre": "Extensión Tríceps en Barra",
+        "reps": "Altas reps (Paciencia)",
+        "series": 4,
+        "imagen_preview": "f2_triceps_barra",
+        "video_url": null,
+        "nota": "Comienza simplificado, hazlo difícil y finaliza simplificado.",
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "F_3",
+    "tipo": "F",
+    "titulo": "Fuerza Día 3",
+    "descripcion": "Descansos mínimos. Orden establecido, no circuito.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Desplante adelante + Sentadilla",
+        "reps": "10-12 por lado",
+        "series": 4,
+        "imagen_preview": "f3_desplante_sentadilla",
+        "video_url": null,
+        "nota": "Con mancuernas.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Flexiones Mike Tyson",
+        "reps": "5 reps (10 series intercaladas)",
+        "series": 10,
+        "imagen_preview": "f3_tyson_pushup",
+        "video_url": null,
+        "nota": "Intercaladas en la rutina.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Grip Pull Up",
+        "reps": "Al máximo",
+        "series": 4,
+        "imagen_preview": "f3_grip_pullup",
+        "video_url": null,
+        "nota": "Con bandas.",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Plancha + Tracción",
+        "reps": "15-20 por lado",
+        "series": 4,
+        "imagen_preview": "f3_plancha_traccion",
+        "video_url": null,
+        "nota": "Con banda elástica.",
+        "es_timer": false
+      },
+      {
+        "orden": 5,
+        "nombre": "Bench Triceps",
+        "reps": "Al fallo",
+        "series": 4,
+        "imagen_preview": "f3_bench_triceps",
+        "video_url": null,
+        "nota": null,
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "F_4",
+    "tipo": "F",
+    "titulo": "Fuerza Día 4",
+    "descripcion": "Descansos mínimos. Ejercicios en orden, no circuito.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Desplante Lateral",
+        "reps": "Máximas",
+        "series": 4,
+        "imagen_preview": "f4_desplante_lateral",
+        "video_url": null,
+        "nota": "Con asistencia para correcciones.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Flexiones Declinadas",
+        "reps": "10 reps (10 series intercaladas)",
+        "series": 10,
+        "imagen_preview": "f4_flexion_declinada",
+        "video_url": null,
+        "nota": "Fija un descanso de 40s o menos entre series intercaladas.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Australian Pull Up",
+        "reps": "Máximas (Repetir número)",
+        "series": 4,
+        "imagen_preview": "f4_australian_pullup",
+        "video_url": null,
+        "nota": "Repetir el mismo número en todas las series.",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Chin Up (Isométrica + Negativa)",
+        "reps": "12-15 seg (Isométrica) + bajar lento",
+        "series": 4,
+        "imagen_preview": "f4_chinup_iso_neg",
+        "video_url": null,
+        "nota": null,
+        "es_timer": false
+      },
+      {
+        "orden": 5,
+        "nombre": "Plancha + Tracción",
+        "reps": "15-20 por lado",
+        "series": 4,
+        "imagen_preview": "f4_plancha_traccion",
+        "video_url": null,
+        "nota": "Con banda elástica.",
+        "es_timer": false
+      },
+      {
+        "orden": 6,
+        "nombre": "Fondos en Paralelas o Sillas",
+        "reps": "Máximas",
+        "series": 4,
+        "imagen_preview": "f4_fondos",
+        "video_url": null,
+        "nota": null,
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "F_BASICOS_1",
+    "tipo": "F_BASICOS",
+    "titulo": "Básicos F6",
+    "descripcion": "4 series de cada ejercicio. Meta: descansos de 20-25s. Alternar empuje y halón.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Desplante Hacia Atrás (Pesa Rusa)",
+        "reps": "12-15 por pierna",
+        "series": 4,
+        "imagen_preview": "f6_desplante_atras",
+        "video_url": null,
+        "nota": "Pasa la pesa por debajo a la otra mano al flexionar. Descanso inicial de 45s.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Flexiones Horizontales",
+        "reps": "Máximas (Repetir número)",
+        "series": 4,
+        "imagen_preview": "f6_flexiones",
+        "video_url": null,
+        "nota": "Intenta superar registro anterior.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Pull Up con Bandas",
+        "reps": "10+ reps",
+        "series": 4,
+        "imagen_preview": "f6_pullup_banda",
+        "video_url": null,
+        "nota": "Siempre intentar agregar más reps.",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Plancha + Tracción",
+        "reps": "20+ reps por mano",
+        "series": 4,
+        "imagen_preview": "f6_plancha_traccion",
+        "video_url": null,
+        "nota": "Empezar con bandas gruesas.",
+        "es_timer": false
+      },
+      {
+        "orden": 5,
+        "nombre": "Extra: Pike Push Up",
+        "reps": "Máximas (2 series)",
+        "series": 2,
+        "imagen_preview": "f6_pike_pushup",
+        "video_url": null,
+        "nota": "Descanso mínimo. Registrar el número de reps.",
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "F_7",
+    "tipo": "F_BASICOS",
+    "titulo": "Básicos F7",
+    "descripcion": "4 series de cada ejercicio. Descansos 30-45s entre series/ejercicios. Alternar empuje y halón.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Sentadilla Frente a la Pared",
+        "reps": "15-20 reps",
+        "series": 4,
+        "imagen_preview": "f7_sentadilla_pared",
+        "video_url": null,
+        "nota": "Manos en la cabeza. Repeticiones controladas y lentas. No es necesario llegar al fondo si afecta la ejecución.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Fondos en Paralelas",
+        "reps": "15 reps",
+        "series": 4,
+        "imagen_preview": "f7_fondos",
+        "video_url": null,
+        "nota": "Asistido con banda elástica. Descansar lo necesario.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Chin Up con Bandas",
+        "reps": "10+ reps",
+        "series": 4,
+        "imagen_preview": "f7_chinup_banda",
+        "video_url": null,
+        "nota": "Siempre trata de superar el registro anterior.",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Elevación de Rodillas al Pecho (Suspendido)",
+        "reps": "20 reps",
+        "series": 4,
+        "imagen_preview": "f7_rodillas_pecho",
+        "video_url": null,
+        "nota": null,
+        "es_timer": false
+      },
+      {
+        "orden": 5,
+        "nombre": "Extra: Plancha Inversa / Bench Triceps",
+        "reps": "Al fallo",
+        "series": 2,
+        "imagen_preview": "f7_extra",
+        "video_url": null,
+        "nota": "2 Series Plancha Inversa, 2 Series Bench Triceps. Al fallo.",
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "F_8",
+    "tipo": "F_BASICOS",
+    "titulo": "Básicos F8",
+    "descripcion": "4 series de cada ejercicio (menos Pull Up). Descansos 45s entre ejercicios. No circuito.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Sentadilla Búlgara con Pesa Rusa",
+        "reps": "10 reps por pierna",
+        "series": 4,
+        "imagen_preview": "f8_bulgara",
+        "video_url": null,
+        "nota": "Pie de atrás a poca altura. Pesa en la mano de la pierna flexionada. Reps controladas.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Flexiones Mike Tyson",
+        "reps": "20 reps",
+        "series": 4,
+        "imagen_preview": "f8_tyson_pushup",
+        "video_url": null,
+        "nota": null,
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Pull Up",
+        "reps": "3-4 reps (10 series intercaladas)",
+        "series": 10,
+        "imagen_preview": "f8_pullup",
+        "video_url": null,
+        "nota": "Intercaladas en la rutina. El número de reps de la 1ª serie se repite en las demás.",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Plancha con Codos + Flexión Caderas",
+        "reps": "Máximas",
+        "series": 4,
+        "imagen_preview": "f8_plancha_codos",
+        "video_url": null,
+        "nota": "Pendiente video.",
+        "es_timer": false
+      },
+      {
+        "orden": 5,
+        "nombre": "Extra: Pike Push Ups",
+        "reps": "Máximas",
+        "series": 4,
+        "imagen_preview": "f8_pike_pushup",
+        "video_url": null,
+        "nota": null,
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "F_9",
+    "tipo": "F_BASICOS",
+    "titulo": "Básicos F9",
+    "descripcion": "4 series de cada ejercicio (con excepción de Fondos). Descansos 30-45s entre series/ejercicios. No circuito.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Sentadilla Frente a la Pared",
+        "reps": "15-20 reps",
+        "series": 4,
+        "imagen_preview": "f9_sentadilla_pared",
+        "video_url": null,
+        "nota": "Manos en la cabeza. Repeticiones controladas y lentas. No es necesario llegar al fondo si afecta la ejecución.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Fondos en Paralelas",
+        "reps": "3-5 reps (10 series intercaladas)",
+        "series": 10,
+        "imagen_preview": "f9_fondos",
+        "video_url": null,
+        "nota": "Intercaladas en la rutina.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Dominadas (Cluster)",
+        "reps": "30 Reps Total",
+        "series": 1,
+        "imagen_preview": "f9_dominadas_cluster",
+        "video_url": null,
+        "nota": "Hacer de dos en dos hasta sumar 30. Tratar de no aumentar el descanso breve entre repeticiones.",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Elevación de Rodillas al Pecho (Paralelas)",
+        "reps": "20 reps",
+        "series": 4,
+        "imagen_preview": "f9_rodillas_paralelas",
+        "video_url": null,
+        "nota": "Controladas.",
+        "es_timer": false
+      },
+      {
+        "orden": 5,
+        "nombre": "Extra: Plancha Inversa / Bench Triceps",
+        "reps": "Al fallo",
+        "series": 4,
+        "imagen_preview": "f9_extra",
+        "video_url": null,
+        "nota": "1 Serie Plancha Inversa al fallo; 3 Series Bench Triceps al fallo (descansos mínimos, no bajar el número de reps).",
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "HIBRIDO_1",
+    "tipo": "HIBRIDA",
+    "titulo": "Híbrido 1: Superset",
+    "descripcion": "Fuerza + Resistencia. No descansar entre ejercicios del superset.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Clean & Press",
+        "reps": "6-8 por lado",
+        "series": 3,
+        "superset_id": "ss1",
+        "nota": "Traslado inmediato al siguiente ejercicio.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Dominada",
+        "reps": "5-7",
+        "series": 3,
+        "superset_id": "ss1",
+        "nota": "Simplifica con banda si es necesario.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Extra: Intervalos de Salto",
+        "reps": "10 x 30 saltos",
+        "series": 10,
+        "imagen_preview": "h1_saltos",
+        "video_url": null,
+        "nota": "Descanso 10-15 seg entre intervalos.",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Flexiones",
+        "reps": "12-15 Reps",
+        "series": 3,
+        "superset_id": "ss2",
+        "nota": "Traslado inmediato al siguiente ejercicio.",
+        "es_timer": false
+      },
+      {
+        "orden": 5,
+        "nombre": "Remo (Serrucho)",
+        "reps": "12-15 por lado",
+        "series": 3,
+        "superset_id": "ss2",
+        "nota": "Cuidar la postura de la espalda.",
+        "es_timer": false
+      },
+      {
+        "orden": 6,
+        "nombre": "Sentadilla Sumo",
+        "reps": "12-15",
+        "series": 3,
+        "superset_id": "ss3",
+        "nota": "Traslado inmediato al siguiente ejercicio.",
+        "es_timer": false
+      },
+      {
+        "orden": 7,
+        "nombre": "Twist Ruso",
+        "reps": "10-12 por lado",
+        "series": 3,
+        "superset_id": "ss3",
+        "nota": "Con pesa rusa.",
+        "es_timer": false
+      },
+      {
+        "orden": 8,
+        "nombre": "Fondos",
+        "reps": "7-10",
+        "series": 3,
+        "superset_id": "ss4",
+        "nota": "Fondos sin asistencia, repitiendo número. Traslado inmediato.",
+        "es_timer": false
+      },
+      {
+        "orden": 9,
+        "nombre": "Swing con Pesa Rusa",
+        "reps": "12-15",
+        "series": 3,
+        "superset_id": "ss4",
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "HIBRIDO_2",
+    "tipo": "HIBRIDA",
+    "titulo": "Híbrido 2: Correctivo",
+    "descripcion": "Descansos 30-60s. Calidad correctiva.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Dead Clean + Sentadilla Rack",
+        "reps": "10-12 por lado",
+        "series": 3,
+        "imagen_preview": "h2_deadclean_sq",
+        "video_url": "https://youtu.be/oc0TnNUykEM",
+        "nota": "Sin descanso al cambiar de mano. Si no puedes profundo, a 90°.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Flexión Combinada",
+        "reps": "Al fallo (1ª serie)",
+        "series": 3,
+        "imagen_preview": "h2_flexion_combinada",
+        "video_url": null,
+        "nota": "Escalador + Burpee. Repetir número de 1ª serie en las demás.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Rodillas al Pecho",
+        "reps": "Máximas",
+        "series": 3,
+        "imagen_preview": "h2_rodillas_pecho",
+        "video_url": null,
+        "nota": null,
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "High Pull",
+        "reps": "1 serie bilateral / 2 unilaterales",
+        "series": 3,
+        "imagen_preview": "h2_high_pull",
+        "video_url": null,
+        "nota": "Cuidar ejecución aunque salgan pocas reps.",
+        "es_timer": false
+      },
+      {
+        "orden": 5,
+        "nombre": "Grip Chin Up",
+        "reps": "Max 10-12",
+        "series": 3,
+        "imagen_preview": "h2_grip_chinup",
+        "video_url": null,
+        "nota": "Usa banda que NO permita hacer más de 12.",
+        "es_timer": false
+      },
+      {
+        "orden": 6,
+        "nombre": "Extensión Tríceps (Drop Set)",
+        "reps": "Máximas (<20)",
+        "series": 3,
+        "imagen_preview": "h2_triceps_banda",
+        "video_url": null,
+        "nota": "Empieza con 2 bandas, suelta la delgada cuando no puedas más.",
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "M_1",
+    "tipo": "M",
+    "titulo": "Metabólico 1: Intervalos (Cuerda/Core)",
+    "descripcion": "Estructura de Intervalos: 4 Rondas (10s/10s), 4 Rondas (20s/10s) o Tabata (16 rondas). Duración aprox. 25-28 min.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Saltos Cuerda",
+        "timer_config": {
+          "trabajo": 30,
+          "descanso": 30
+        },
+        "series": 4,
+        "imagen_preview": "m1_cuerda",
+        "video_url": null,
+        "nota": "Repetir 3 veces Saltos Cuerda (1, 5, 7) y 3 veces el patrón Cuerda-Core.",
+        "es_timer": true
+      },
+      {
+        "orden": 2,
+        "nombre": "Escalador Frontal",
+        "timer_config": {
+          "trabajo": 20,
+          "descanso": 30
+        },
+        "series": 4,
+        "imagen_preview": "m1_escalador",
+        "video_url": null,
+        "nota": "Rodillas al pecho.",
+        "es_timer": true
+      },
+      {
+        "orden": 3,
+        "nombre": "Jumping Jacks",
+        "timer_config": {
+          "trabajo": 30,
+          "descanso": 30
+        },
+        "series": 4,
+        "imagen_preview": "m1_jumping_jacks",
+        "video_url": null,
+        "nota": null,
+        "es_timer": true
+      },
+      {
+        "orden": 4,
+        "nombre": "Plancha",
+        "timer_config": {
+          "trabajo": 30,
+          "descanso": 30
+        },
+        "series": 4,
+        "imagen_preview": "m1_plancha",
+        "video_url": null,
+        "nota": "Apreta abdomen.",
+        "es_timer": true
+      },
+      {
+        "orden": 5,
+        "nombre": "Suspensión + Rodillas al Pecho",
+        "timer_config": {
+          "trabajo": 30,
+          "descanso": 30
+        },
+        "series": 4,
+        "imagen_preview": "m1_suspension",
+        "video_url": null,
+        "nota": null,
+        "es_timer": true
+      }
+    ]
+  },
+  {
+    "id": "M_2",
+    "tipo": "M",
+    "titulo": "Metabólico 2: AMRAP & Cluster",
+    "descripcion": "AMRAP 15min (Mayor cantidad de series en ese tiempo) + Cluster. Cluster: pausas mínimas (no descansos).",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "AMRAP 15 Minutos (Bloque 1)",
+        "reps": "Máximas series",
+        "timer_config": {
+          "trabajo": 900,
+          "descanso": 0
+        },
+        "imagen_preview": "m2_amrap",
+        "video_url": "youtu.be/AKgqIGVdinE",
+        "es_timer": true,
+        "sub_ejercicios": [
+          { "nombre": "Semisentadilla+Press", "reps": "10-12" },
+          { "nombre": "Antirrotación", "reps": "10" },
+          { "nombre": "Flexiones", "reps": "7-10" },
+          { "nombre": "Skipping en el lugar", "reps": "30s" }
+        ]
+      },
+      {
+        "orden": 2,
+        "nombre": "Cluster: Fondos (Dips)",
+        "reps": "60 Total",
+        "series": 1,
+        "imagen_preview": "m2_fondos",
+        "video_url": null,
+        "nota": "Hacer las paradas que hagan falta, pausas mínimas (no descansos). Extra: 4 series de Australian Pull Up.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Cluster: Dominadas",
+        "reps": "30 Total",
+        "series": 1,
+        "imagen_preview": "m2_dominadas",
+        "video_url": null,
+        "nota": null,
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Cluster: Escaladores",
+        "reps": "60 Total",
+        "series": 1,
+        "imagen_preview": "m2_escaladores",
+        "video_url": null,
+        "nota": "Controlados, rodilla proyectada hacia el pecho.",
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "M_3",
+    "tipo": "M",
+    "titulo": "Metabólico 3: Pesa Rusa, EMOM y Burpees",
+    "descripcion": "Bloque 1 (Pesa Rusa) < 10min. Bloque 2 (Tabata/EMOM) 15-20 min. No sacrificar la ejecución de burpees.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Bloque Pesa Rusa: Swing",
+        "timer_config": {
+          "trabajo": 10,
+          "descanso": 10
+        },
+        "series": 3,
+        "imagen_preview": "m3_swing",
+        "video_url": null,
+        "nota": "2-3 Rondas de 10s trabajo / 10s descanso.",
+        "es_timer": true
+      },
+      {
+        "orden": 2,
+        "nombre": "Bloque Pesa Rusa: Alrededor del Mundo",
+        "timer_config": {
+          "trabajo": 10,
+          "descanso": 10
+        },
+        "series": 3,
+        "imagen_preview": "m3_around_world",
+        "video_url": null,
+        "nota": "2-3 Rondas de 10s trabajo / 10s descanso.",
+        "es_timer": true
+      },
+      {
+        "orden": 3,
+        "nombre": "Bloque Pesa Rusa: Pistolero",
+        "timer_config": {
+          "trabajo": 10,
+          "descanso": 10
+        },
+        "series": 3,
+        "imagen_preview": "m3_pistolero",
+        "video_url": null,
+        "nota": "2-3 Rondas de 10s trabajo / 10s descanso.",
+        "es_timer": true
+      },
+      {
+        "orden": 4,
+        "nombre": "Bloque Pesa Rusa: Sentadillas",
+        "timer_config": {
+          "trabajo": 10,
+          "descanso": 10
+        },
+        "series": 3,
+        "imagen_preview": "m3_sentadillas",
+        "video_url": null,
+        "nota": "2-3 Rondas de 10s trabajo / 10s descanso.",
+        "es_timer": true
+      },
+      {
+        "orden": 5,
+        "nombre": "EMOM / Tabata Alternado",
+        "reps": "15 Minutos",
+        "timer_config": {
+          "timer_type": "emom",
+          "total_duration": 900,
+          "interval": 60
+        },
+        "imagen_preview": "m3_emom_alternado",
+        "video_url": null,
+        "nota": "Alternar 1 serie de 10 Burpees con 1 serie de 40-50 Saltos Cuerda hasta 15 min. Reducir saltos para recuperación si es necesario.",
+        "es_timer": true
+      }
+    ]
+  },
+  {
+    "id": "AM_1",
+    "tipo": "AM",
+    "titulo": "Activación Muscular 1",
+    "descripcion": "4 series. Flexibilidad y Core a un ritmo que permita atención al trabajo. Extra: Colgarse al máximo durante el día (atento a escápulas).",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Around the World + Swing",
+        "reps": "7-10 Swing",
+        "series": 3,
+        "imagen_preview": "am1_around_world",
+        "video_url": "https://youtu.be/eddJwv8lzfI",
+        "nota": "Extra: Extensión de tríceps en barra (codos adentro a la altura de sien/orejas). No extender el cuerpo para impedir la flexión/extensión de brazos.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Puente de Cadera",
+        "reps": "Series largas",
+        "series": 4,
+        "imagen_preview": "am1_puente",
+        "video_url": null,
+        "nota": "Controlado.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Retracción/Protracción Escapular",
+        "reps": "15-20 reps (Series largas)",
+        "series": 4,
+        "imagen_preview": "am1_escapular",
+        "video_url": null,
+        "nota": "En el piso en posición de plancha. Tienes que sentir que trabaja el abdomen en la protracción (extendiendo bien brazos).",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "EMOM 10-15 min",
+        "timer_config": {
+          "trabajo": 60,
+          "descanso": 0
+        },
+        "series": 10,
+        "imagen_preview": "am1_emom",
+        "video_url": null,
+        "nota": "Escaladores + 30 saltos en cuerda cada minuto (x 10-15 min).",
+        "es_timer": true
+      },
+      {
+        "orden": 5,
+        "nombre": "AMRAP 15 min",
+        "timer_config": {
+          "trabajo": 900,
+          "descanso": 0
+        },
+        "series": 1,
+        "imagen_preview": "am1_amrap",
+        "video_url": null,
+        "nota": "Tantas series como puedas en 15 min: 5-7 Pull Ups Australianas / 5 Sentadillas Prof. / 10 Bench Triceps / 10s Plancha. Continuo con pausas mínimas, cuidando ejecución.",
+        "es_timer": true
+      }
+    ]
+  },
+  {
+    "id": "AM_2",
+    "tipo": "AM",
+    "titulo": "Activación Muscular 2",
+    "descripcion": "Flexibilidad a un ritmo que permita atención al trabajo. 4 series por ejercicio.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Sentadilla Isométrica + Jumping Semi Squat",
+        "reps": "30-60 seg (Iso) + 5-7 (Saltos)",
+        "series": 4,
+        "imagen_preview": "am2_sentadilla_iso",
+        "video_url": null,
+        "nota": "Extra: Salto Tabata (25 intervalos de 20s salto / 10s descanso). Ejercicios: salto cuerda / hachero / burpees / plancha. (12 min total).",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Antirrotación (Pallof Press)",
+        "reps": "Máximas",
+        "series": 4,
+        "imagen_preview": "am2_antirrotacion",
+        "video_url": null,
+        "nota": "Con bandas elásticas.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Posición del Niño",
+        "reps": "Breve (Antes y después de tracción)",
+        "series": 1,
+        "imagen_preview": "am2_posicion_nino",
+        "video_url": null,
+        "nota": "Pasar brevemente por la posición del niño antes y después de la tracción con bandas.",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Dominadas Escapulares + Isométrica",
+        "reps": "5 (Escapulares) + Máximo tiempo (Isométrica)",
+        "series": 6,
+        "imagen_preview": "am2_dominadas_esc",
+        "video_url": null,
+        "nota": null,
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "RM_1",
+    "tipo": "RM",
+    "titulo": "Resistencia Muscular 1 (Escaleras y Pirámides)",
+    "descripcion": "Escaleras, Pirámides y Supersets. 3 series por ejercicio (excepto Escaleras/Pirámides).",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Escalera: Desplantes Adelante",
+        "reps": "5, 10, 15... Máximo",
+        "series": 1,
+        "imagen_preview": "rm1_desplantes",
+        "video_url": "https://youtu.be/MpX8IHL7NuI",
+        "nota": "Aumenta de 5 en 5 hasta que no puedas más. Con mancuernas.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Tracción con Banda (Iso + Reps)",
+        "reps": "Máximas",
+        "series": 3,
+        "imagen_preview": "rm1_traccion",
+        "video_url": null,
+        "nota": "Aguanta isométrico y luego reps.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Pirámide: Flexiones Inclinadas",
+        "reps": "2, 4, 6... Máximo ...6, 4, 2",
+        "series": 1,
+        "imagen_preview": "rm1_flexion_piramide",
+        "video_url": null,
+        "nota": "Sube y baja de 2 en 2.",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Plancha + Tracción",
+        "reps": "15-20 por mano",
+        "series": 3,
+        "imagen_preview": "rm1_plancha_traccion",
+        "video_url": null,
+        "nota": "Con banda elástica.",
+        "es_timer": false
+      },
+      {
+        "orden": 5,
+        "nombre": "Dominadas Chin Up",
+        "reps": "Máximas",
+        "series": 3,
+        "imagen_preview": "rm1_chinup",
+        "video_url": null,
+        "nota": "Usar bandas elásticas que permitan hacer bien y más de 7 reps.",
+        "es_timer": false
+      },
+      {
+        "orden": 6,
+        "nombre": "Extra: Supersets Antirrotación / Gastronemios",
+        "reps": "Máximas",
+        "series": 2,
+        "imagen_preview": "rm1_extra",
+        "video_url": null,
+        "nota": "2 Series máximas de Antirrotación (banda elástica) seguidas de Gastronemios. Supersets sin descanso.",
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "RM_2",
+    "tipo": "RM",
+    "titulo": "Resistencia Muscular 2 (Supersets)",
+    "descripcion": "4 Supersets (ejercicios de regiones diferentes sin descanso).",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Superset: Desplante Atrás / Planchas",
+        "reps": "Máximas",
+        "series": 4,
+        "imagen_preview": "rm2_desplante_plancha",
+        "video_url": null,
+        "nota": "4 Supersets sin descanso entre ejercicios.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Superset: Chin Up / Flexiones Horizontales",
+        "reps": "Máximas",
+        "series": 4,
+        "imagen_preview": "rm2_chinup_flexiones",
+        "video_url": null,
+        "nota": "4 Supersets sin descanso entre ejercicios.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Superset: Puente Cadera Unilateral / Elevación Rodillas",
+        "reps": "Máximas",
+        "series": 4,
+        "imagen_preview": "rm2_puente_rodillas",
+        "video_url": null,
+        "nota": "Elevación de rodillas suspendido en barra. 4 Supersets sin descanso entre ejercicios.",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Pull Up Australiana (Cluster)",
+        "reps": "Máximas (Total)",
+        "series": 1,
+        "imagen_preview": "rm2_australian_cluster",
+        "video_url": null,
+        "nota": "Cluster: introduce pausas de descanso dentro de la misma serie.",
+        "es_timer": false
+      },
+      {
+        "orden": 5,
+        "nombre": "Extra: Biserie Bench Triceps / Extensión Triceps",
+        "reps": "Máximas",
+        "series": 4,
+        "imagen_preview": "rm2_triceps_biserie",
+        "video_url": null,
+        "nota": "4 Biseries sin descanso (dos series de la misma región muscular sin descanso).",
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "RM_3",
+    "tipo": "RM",
+    "titulo": "Resistencia Muscular 3 (Escalera y Cluster)",
+    "descripcion": "Escalera: el número de repeticiones asciende al máximo.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Escalera: Desplante Adelante",
+        "reps": "2, 4, 6, 8, 10... Máximo",
+        "series": 1,
+        "imagen_preview": "rm3_desplante_escalera",
+        "video_url": null,
+        "nota": "Aumenta de 2 en 2.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Antirrotación (Bandas) / Planchas",
+        "reps": "Máximas",
+        "series": 4,
+        "imagen_preview": "rm3_antirrotacion_plancha",
+        "video_url": null,
+        "nota": "Superset.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Dominadas (Cluster)",
+        "reps": "Máximas (Total)",
+        "series": 1,
+        "imagen_preview": "rm3_dominadas_cluster",
+        "video_url": null,
+        "nota": "Cluster: introduce pausas de descanso dentro de la misma serie.",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Flexiones (Inclinadas) / Dominadas",
+        "reps": "Máximas",
+        "series": 4,
+        "imagen_preview": "rm3_flexiones_dominadas",
+        "video_url": null,
+        "nota": "Superset. Flexiones pueden ser inclinadas.",
+        "es_timer": false
+      },
+      {
+        "orden": 5,
+        "nombre": "Extra: Elevación de Rodillas Isométrica",
+        "reps": "Máximo tiempo",
+        "series": 3,
+        "imagen_preview": "rm3_rodillas_iso",
+        "video_url": null,
+        "nota": "2-3 series.",
+        "es_timer": false
+      }
+    ]
+  },
+  {
+    "id": "RM_4",
+    "tipo": "RM",
+    "titulo": "Resistencia Muscular 4 (Escaleras y Dominadas)",
+    "descripcion": "Bloque I: 3 Escaleras progresivas. Bloque II: Dominadas y Extensión de Triceps.",
+    "ejercicios": [
+      {
+        "orden": 1,
+        "nombre": "Bloque I: Escalera 1",
+        "reps": "Desplante 5, Escalador 5-7, Flexión 5",
+        "series": 1,
+        "imagen_preview": "rm4_esc1",
+        "video_url": null,
+        "nota": "Las repeticiones de la progresión aumentan hasta el máximo.",
+        "es_timer": false
+      },
+      {
+        "orden": 2,
+        "nombre": "Bloque I: Escalera 2",
+        "reps": "Sentadilla Pared 10, Escalador 5-7, Flexión 5",
+        "series": 1,
+        "imagen_preview": "rm4_esc2",
+        "video_url": null,
+        "nota": "Las repeticiones de la progresión aumentan hasta el máximo.",
+        "es_timer": false
+      },
+      {
+        "orden": 3,
+        "nombre": "Bloque I: Escalera 3",
+        "reps": "Semisentadilla + Salto 15, Escalador 5-7, Flexión 5",
+        "series": 1,
+        "imagen_preview": "rm4_esc3",
+        "video_url": null,
+        "nota": "Las repeticiones de la progresión aumentan hasta el máximo.",
+        "es_timer": false
+      },
+      {
+        "orden": 4,
+        "nombre": "Bloque II: Dominadas",
+        "reps": "25 Reps Total (Cluster)",
+        "series": 8,
+        "imagen_preview": "rm4_dominadas_cluster",
+        "video_url": null,
+        "nota": "Dividir en 8 series de 3 reps (24). Repartidas entre las escaleras (1 serie antes de Esc. 1, 2 series entre cada escalera).",
+        "es_timer": false
+      },
+      {
+        "orden": 5,
+        "nombre": "Extra: Extensión de Tríceps con Banda Elástica",
+        "reps": "Máximas",
+        "series": 5,
+        "imagen_preview": "rm4_triceps_banda",
+        "video_url": "https://www.youtube.com/watch?v=v3uVtjVASzs",
+        "nota": "4-5 series de repeticiones máximas.",
+        "es_timer": false
+      }
+    ]
+  }
+]

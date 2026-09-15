@@ -1,0 +1,25 @@
+[
+  {
+    "id": "PROG_FUERZA_BASICA_4S",
+    "titulo": "Fuerza Básica (4 Semanas)",
+    "descripcion": "Un programa balanceado de 4 semanas enfocado en construir una base de fuerza y resistencia, ideal para empezar.",
+    "semanas": [
+      {
+        "semana": 1,
+        "plan": { "F_BASICOS": 2, "HIBRIDA": 2, "M": 1, "AM": 2 }
+      },
+      {
+        "semana": 2,
+        "plan": { "F_BASICOS": 2, "HIBRIDA": 2, "AM": 3 }
+      },
+      {
+        "semana": 3,
+        "plan": { "F_BASICOS": 2, "HIBRIDA": 2, "M": 1, "AM": 2 }
+      },
+      {
+        "semana": 4,
+        "plan": { "F_BASICOS": 2, "HIBRIDA": 2, "AM": 3 }
+      }
+    ]
+  }
+]
