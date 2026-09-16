@@ -73,7 +73,7 @@ export function SideBar({ user, role, onLogout }) {
 
   return (
     <aside className={clsx(
-      'my-3 ml-3 h-[calc(100vh-1.5rem)] bg-surface flex flex-col border border-border rounded-xl shadow-sm transition-all duration-200 relative',
+      'my-3 ml-3 h-[calc(100vh-1.5rem)] bg-surface flex flex-col border border-border rounded-xl shadow-sm transition-all duration-200 relative z-[60]',
       collapsed ? 'w-[4.5rem]' : 'w-64'
     )}>
 
