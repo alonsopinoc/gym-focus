@@ -21,11 +21,13 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 const ROUTINE_TYPES = {
   F:        { label: 'Fuerza',      dot: 'bg-blue-500',    badge: 'bg-blue-500'    },
-  F_BASICOS:{ label: 'Básicos',     dot: 'bg-sky-400',     badge: 'bg-sky-400'     },
+  F_BASICOS:{ label: 'Básicos F',   dot: 'bg-sky-400',     badge: 'bg-sky-400'     },
   HIBRIDA:  { label: 'Híbrido',     dot: 'bg-purple-500',  badge: 'bg-purple-500'  },
   M:        { label: 'Metabólico',  dot: 'bg-red-500',     badge: 'bg-red-500'     },
   AM:       { label: 'Activación',  dot: 'bg-emerald-500', badge: 'bg-emerald-500' },
   RM:       { label: 'Resistencia', dot: 'bg-orange-500',  badge: 'bg-orange-500'  },
+  K:        { label: 'Kettlebell',  dot: 'bg-amber-500',   badge: 'bg-amber-500'   },
+  B:        { label: 'Básico',      dot: 'bg-teal-500',    badge: 'bg-teal-500'    },
 };
 
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];

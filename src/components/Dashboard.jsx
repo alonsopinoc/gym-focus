@@ -3,21 +3,24 @@ import { clsx } from 'clsx';
 import {
   Dumbbell, Zap, HeartPulse, Star, Repeat, Search, Edit,
   PlusCircle, ChevronRight, ChevronDown, X, ArrowLeft, Trash2, BookOpen,
+  Weight, Target, RefreshCw,
 } from 'lucide-react';
 import { MinimalNumberInput } from './MinimalNumberInput';
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
 const ROUTINE_TYPES = {
   F:         { label: 'Fuerza',      badge: 'bg-blue-500',    border: 'border-l-blue-500',    icon: <Dumbbell size={13} /> },
-  F_BASICOS: { label: 'Básicos',     badge: 'bg-sky-400',     border: 'border-l-sky-400',     icon: <Star size={13} /> },
+  F_BASICOS: { label: 'Básicos F',   badge: 'bg-sky-400',     border: 'border-l-sky-400',     icon: <Star size={13} /> },
   HIBRIDA:   { label: 'Híbrido',     badge: 'bg-purple-500',  border: 'border-l-purple-500',  icon: <Repeat size={13} /> },
   M:         { label: 'Metabólico',  badge: 'bg-red-500',     border: 'border-l-red-500',     icon: <Zap size={13} /> },
   AM:        { label: 'Activación',  badge: 'bg-emerald-500', border: 'border-l-emerald-500', icon: <HeartPulse size={13} /> },
   RM:        { label: 'Resistencia', badge: 'bg-orange-500',  border: 'border-l-orange-500',  icon: <HeartPulse size={13} /> },
+  K:         { label: 'Kettlebell',  badge: 'bg-amber-500',   border: 'border-l-amber-500',   icon: <Weight size={13} /> },
+  B:         { label: 'Básico',      badge: 'bg-teal-500',    border: 'border-l-teal-500',    icon: <Target size={13} /> },
 };
 
-const TAB_ORDER  = ['ALL', 'F', 'AM', 'F_BASICOS', 'HIBRIDA', 'M', 'RM'];
-const TAB_LABELS = { ALL: 'Todos', F: 'Fuerza', F_BASICOS: 'Básicos', HIBRIDA: 'Híbrido', M: 'Metabólico', AM: 'Activación', RM: 'Resistencia' };
+const TAB_ORDER  = ['ALL', 'F', 'AM', 'F_BASICOS', 'HIBRIDA', 'M', 'RM', 'K', 'B'];
+const TAB_LABELS = { ALL: 'Todos', F: 'Fuerza', F_BASICOS: 'Básicos F', HIBRIDA: 'Híbrido', M: 'Metabólico', AM: 'Activación', RM: 'Resistencia', K: 'Kettlebell', B: 'Básico' };
 
 
 // ─── Selector de ejercicio desde librería ─────────────────────────────────────
@@ -408,7 +411,7 @@ function CreateRoutineModal({ onClose, onCreate, library }) {
 
 // ─── Pantalla de selección de tipo ───────────────────────────────────────────
 
-function TypePickerScreen({ routines, onSelect, onCreateRoutine }) {
+function TypePickerScreen({ routines, onSelect, onCreateRoutine, onResetRoutines }) {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8">
       <p className="text-sm text-muted mb-6">¿Qué tipo de rutina quieres ver?</p>
@@ -443,12 +446,19 @@ function TypePickerScreen({ routines, onSelect, onCreateRoutine }) {
       </div>
 
       {onCreateRoutine && (
-        <div className="mt-8">
+        <div className="mt-8 flex items-center gap-5 flex-wrap">
           <button onClick={onCreateRoutine}
             className="flex items-center gap-2 text-sm text-primary hover:text-primary-hover font-semibold transition-colors">
             <PlusCircle size={16} />
             Crear nueva rutina
           </button>
+          {onResetRoutines && (
+            <button onClick={onResetRoutines}
+              className="flex items-center gap-2 text-sm text-muted hover:text-danger font-semibold transition-colors">
+              <RefreshCw size={14} />
+              Restaurar rutinas por defecto
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -457,7 +467,7 @@ function TypePickerScreen({ routines, onSelect, onCreateRoutine }) {
 
 // ─── Dashboard principal ──────────────────────────────────────────────────────
 
-export function Dashboard({ routines, exerciseLibrary, onSelectRoutine, onEditRoutine, onCreateRoutine }) {
+export function Dashboard({ routines, exerciseLibrary, onSelectRoutine, onEditRoutine, onCreateRoutine, onResetRoutines }) {
   const [activeTab,  setActiveTab]  = useState(null); // null = pantalla de selección
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedId, setExpandedId] = useState(null);
@@ -543,6 +553,7 @@ export function Dashboard({ routines, exerciseLibrary, onSelectRoutine, onEditRo
           routines={routines}
           onSelect={handleSelectTab}
           onCreateRoutine={onCreateRoutine ? () => setShowModal(true) : undefined}
+          onResetRoutines={onResetRoutines}
         />
       ) : (
         /* Lista filtrada */

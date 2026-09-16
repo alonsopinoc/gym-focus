@@ -3,17 +3,20 @@ import { clsx } from 'clsx';
 import {
   Dumbbell, Zap, HeartPulse, Star, Repeat, ChevronRight, ChevronLeft,
   Plus, Minus, Wand2, X, CheckCircle2, CalendarDays, ArrowLeft,
+  Weight, Target,
 } from 'lucide-react';
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
 const ROUTINE_TYPES = {
   F:        { label: 'Fuerza',      badge: 'bg-blue-500',    border: 'border-blue-500',    icon: Dumbbell   },
-  F_BASICOS:{ label: 'Básicos',     badge: 'bg-sky-400',     border: 'border-sky-400',     icon: Star       },
+  F_BASICOS:{ label: 'Básicos F',   badge: 'bg-sky-400',     border: 'border-sky-400',     icon: Star       },
   HIBRIDA:  { label: 'Híbrido',     badge: 'bg-purple-500',  border: 'border-purple-500',  icon: Repeat     },
   M:        { label: 'Metabólico',  badge: 'bg-red-500',     border: 'border-red-500',     icon: Zap        },
   AM:       { label: 'Activación',  badge: 'bg-emerald-500', border: 'border-emerald-500', icon: HeartPulse },
   RM:       { label: 'Resistencia', badge: 'bg-orange-500',  border: 'border-orange-500',  icon: HeartPulse },
+  K:        { label: 'Kettlebell',  badge: 'bg-amber-500',   border: 'border-amber-500',   icon: Weight     },
+  B:        { label: 'Básico',      badge: 'bg-teal-500',    border: 'border-teal-500',    icon: Target     },
 };
 
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];

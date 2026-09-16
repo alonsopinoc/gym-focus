@@ -4,17 +4,20 @@ import { clsx } from 'clsx';
 import {
   ChevronLeft, ChevronRight, ChevronDown, X, ArrowLeft, Trash2, Replace,
   CheckCircle2, CalendarX2, Dumbbell, Zap, HeartPulse, Star, Repeat,
+  Weight, Target,
 } from 'lucide-react';
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
 
 const ROUTINE_TYPES = {
   F:        { label: 'Fuerza',      dot: 'bg-blue-500',   badge: 'bg-blue-500',   icon: <Dumbbell size={13} /> },
-  F_BASICOS:{ label: 'Básicos',     dot: 'bg-sky-400',    badge: 'bg-sky-400',    icon: <Star size={13} /> },
+  F_BASICOS:{ label: 'Básicos F',   dot: 'bg-sky-400',    badge: 'bg-sky-400',    icon: <Star size={13} /> },
   HIBRIDA:  { label: 'Híbrido',     dot: 'bg-purple-500', badge: 'bg-purple-500', icon: <Repeat size={13} /> },
   M:        { label: 'Metabólico',  dot: 'bg-red-500',    badge: 'bg-red-500',    icon: <Zap size={13} /> },
   AM:       { label: 'Activación',  dot: 'bg-emerald-500',badge: 'bg-emerald-500',icon: <HeartPulse size={13} /> },
   RM:       { label: 'Resistencia', dot: 'bg-orange-500', badge: 'bg-orange-500', icon: <HeartPulse size={13} /> },
+  K:        { label: 'Kettlebell',  dot: 'bg-amber-500',  badge: 'bg-amber-500',  icon: <Weight size={13} /> },
+  B:        { label: 'Básico',      dot: 'bg-teal-500',   badge: 'bg-teal-500',   icon: <Target size={13} /> },
 };
 
 const WEEKDAYS_FULL = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];

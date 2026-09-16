@@ -6,16 +6,19 @@ import {
   CheckCircle2, CalendarDays, ChevronRight,
   Scale, TrendingUp, Flame, CalendarX2,
   User, LogOut, Sun, Moon, X,
+  Weight, Target,
 } from 'lucide-react';
 import { useTheme } from '../../ThemeContext.jsx';
 
 const ROUTINE_TYPES = {
   F:        { label: 'Fuerza',      badge: 'bg-blue-500',    icon: <Dumbbell size={13} />  },
-  F_BASICOS:{ label: 'Básicos',     badge: 'bg-sky-400',     icon: <Star size={13} />      },
+  F_BASICOS:{ label: 'Básicos F',   badge: 'bg-sky-400',     icon: <Star size={13} />      },
   HIBRIDA:  { label: 'Híbrido',     badge: 'bg-purple-500',  icon: <Repeat size={13} />    },
   M:        { label: 'Metabólico',  badge: 'bg-red-500',     icon: <Zap size={13} />       },
   AM:       { label: 'Activación',  badge: 'bg-emerald-500', icon: <HeartPulse size={13} />},
   RM:       { label: 'Resistencia', badge: 'bg-orange-500',  icon: <HeartPulse size={13} />},
+  K:        { label: 'Kettlebell',  badge: 'bg-amber-500',   icon: <Weight size={13} />    },
+  B:        { label: 'Básico',      badge: 'bg-teal-500',    icon: <Target size={13} />    },
 };
 
 function toKey(d) { return d.toISOString().split('T')[0]; }

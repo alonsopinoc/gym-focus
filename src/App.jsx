@@ -185,6 +185,12 @@ function AppContent({ user }) {
     navigate('/rutinas');
   };
 
+  const handleResetRoutines = () => {
+    if (userRole !== 'admin') return;
+    if (!window.confirm('Esto reemplaza TODAS las rutinas (para todos los alumnos) por las rutinas por defecto del código. ¿Continuar?')) return;
+    setRoutines(initialRoutines);
+  };
+
   const handleApplyProgram = (program, startDate, startDayOfWeek) => {
     const newScheduledRoutines = {};
     let currentDate = new Date(startDate);
@@ -344,7 +350,7 @@ function AppContent({ user }) {
           </Route>
           
           {/* Dashboard: Solo pasamos funciones de edición si es admin */}
-          <Route path="/rutinas" element={<Dashboard routines={routines} exerciseLibrary={exerciseLibrary} onSelectRoutine={handleSelectRoutine} onEditRoutine={userRole === 'admin' ? handleEditRoutine : undefined} onCreateRoutine={userRole === 'admin' ? handleCreateRoutine : undefined} />} />
+          <Route path="/rutinas" element={<Dashboard routines={routines} exerciseLibrary={exerciseLibrary} onSelectRoutine={handleSelectRoutine} onEditRoutine={userRole === 'admin' ? handleEditRoutine : undefined} onCreateRoutine={userRole === 'admin' ? handleCreateRoutine : undefined} onResetRoutines={userRole === 'admin' ? handleResetRoutines : undefined} />} />
           
           <Route path="/rutina/:id" element={<WorkoutViewWrapper />} />
           

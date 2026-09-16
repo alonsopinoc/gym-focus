@@ -8,11 +8,13 @@ import { MinimalNumberInput } from './MinimalNumberInput';
 
 const ROUTINE_TYPES = {
   F:         { label: 'Fuerza',      badge: 'bg-blue-500' },
-  F_BASICOS: { label: 'Básicos',     badge: 'bg-sky-400' },
+  F_BASICOS: { label: 'Básicos F',   badge: 'bg-sky-400' },
   HIBRIDA:   { label: 'Híbrido',     badge: 'bg-purple-500' },
   M:         { label: 'Metabólico',  badge: 'bg-red-500' },
   AM:        { label: 'Activación',  badge: 'bg-emerald-500' },
   RM:        { label: 'Resistencia', badge: 'bg-orange-500' },
+  K:         { label: 'Kettlebell',  badge: 'bg-amber-500' },
+  B:         { label: 'Básico',      badge: 'bg-teal-500' },
 };
 
 // ─── Picker de librería ────────────────────────────────────────────────────────
