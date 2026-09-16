@@ -5,7 +5,7 @@ import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager
 
 const firebaseConfig = {
   apiKey: "AIzaSyB1DGOBnpma5sg9AYwTAhwRl8LN3j02bDk",
-  authDomain: "gym-apc.firebaseapp.com",
+  authDomain: "gym-apc.web.app",
   projectId: "gym-apc",
   storageBucket: "gym-apc.firebasestorage.app",
   messagingSenderId: "645735217820",
