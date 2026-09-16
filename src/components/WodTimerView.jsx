@@ -100,10 +100,10 @@ export function WodTimerView() {
 
   if (screen === 'countdown') {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center z-50 text-text bg-bg">
+      <div className="fixed inset-0 flex flex-col items-center justify-center z-50 text-text bg-bg pb-20 md:pb-0">
         <div className="absolute top-6 right-6 flex items-center gap-2">
           <button onClick={handleMinimize} title="Minimizar"
-            className="p-2 bg-bg/10 rounded-full hover:bg-bg/20 transition-colors">
+            className="hidden md:flex p-2 bg-bg/10 rounded-full hover:bg-bg/20 transition-colors">
             <Minus size={22} />
           </button>
           <button onClick={handleTerminar}
@@ -140,7 +140,7 @@ export function WodTimerView() {
     const isRest = timerType === 'TABATA' && phase === 'REST';
     return (
       <div className={clsx(
-        "fixed inset-0 flex flex-col items-center justify-center z-50 transition-colors duration-500 px-6",
+        "fixed inset-0 flex flex-col items-center justify-center z-50 transition-colors duration-500 px-6 pb-20 md:pb-0",
         isRest
           ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
           : 'bg-bg text-text',
@@ -149,7 +149,7 @@ export function WodTimerView() {
         {/* Minimizar / Terminar */}
         <div className="absolute top-5 right-5 flex items-center gap-2">
           <button onClick={handleMinimize} title="Minimizar — sigue corriendo mientras navegas"
-            className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 transition-colors">
+            className="hidden md:flex p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 transition-colors">
             <Minus size={20} />
           </button>
           <button onClick={handleTerminar}

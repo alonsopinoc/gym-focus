@@ -17,7 +17,7 @@ export function NavBar({ role }) {
 
   return (
     <nav className={clsx(
-      "md:hidden fixed bottom-0 left-0 right-0 z-20",
+      "md:hidden fixed bottom-0 left-0 right-0 z-[60]",
       "bg-surface/95 backdrop-blur-md border-t border-border",
       // safe-area-inset-bottom para iPhone con home indicator
       "pb-[env(safe-area-inset-bottom)]",

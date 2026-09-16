@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Timer, Play, Pause, X, Maximize2 } from 'lucide-react';
 import { useTimer } from '../TimerContext.jsx';
 
@@ -6,13 +6,14 @@ const MODE_LABELS = { AMRAP: 'AMRAP', INTERVALS: 'Intervalos', TABATA: 'Tabata' 
 
 export function FloatingTimerWidget() {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
-    screen, minimized, hasActiveSession, expand,
+    screen, hasActiveSession, expand,
     timerType, timeLeft, countdown, isActive, setIsActive,
     handleFinish, formatTime,
   } = useTimer();
 
-  if (!hasActiveSession || !minimized) return null;
+  if (!hasActiveSession || location.pathname === '/timer') return null;
 
   const handleExpand = () => {
     expand();
