@@ -216,7 +216,14 @@ export function EditRoutineView({ routine, exerciseLibrary, onSave, onCancel, on
   const [hasChanges,  setHasChanges]  = useState(false);
   const newNameRef = useRef(null);
 
-  useEffect(() => { setData(routine); setHasChanges(false); }, [routine]);
+  // Si cambia la rutina recibida, descartamos el borrador durante el render
+  const [prevRoutine, setPrevRoutine] = useState(routine);
+  if (routine !== prevRoutine) {
+    setPrevRoutine(routine);
+    setData(routine);
+    setHasChanges(false);
+  }
+
   useEffect(() => { if (addingName) newNameRef.current?.focus(); }, [addingName]);
 
   const mutate = (updater) => {

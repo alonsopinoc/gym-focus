@@ -222,7 +222,7 @@ export function CalendarView({ routines, scheduledRoutines, onScheduleRoutine, o
 
         {/* Cabecera días de la semana */}
         <div className="grid grid-cols-7 mb-1 border-b border-border pb-2">
-          {WEEKDAYS_MIN.map((d, i) => (
+          {WEEKDAYS_MIN.map(d => (
             <div key={d} className="text-center text-xs font-semibold text-muted sm:hidden">{d}</div>
           ))}
           {WEEKDAYS_FULL.map(d => (

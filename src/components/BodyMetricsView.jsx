@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import { PlusCircle, Trash2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { useTheme } from '../../ThemeContext.jsx';
+import { useTheme } from '../../ThemeContext.js';
 import {
   Chart as ChartJS,
   CategoryScale,

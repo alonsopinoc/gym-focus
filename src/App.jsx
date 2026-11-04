@@ -20,8 +20,39 @@ import { AdminUsersView } from './components/AdminUsersView';
 import { ExerciseLibraryManagerView } from './components/ExerciseLibraryManagerView';
 import { StudentDetailView } from './components/StudentDetailView';
 import initialLibrary from './data/ejercicios_library.json';
-import { TimerProvider } from './TimerContext.jsx';
+import { TimerProvider } from './TimerProvider.jsx';
 import { FloatingTimerWidget } from './components/FloatingTimerWidget';
+
+// Componentes Wrapper para manejar la obtención de la rutina desde la URL.
+// Viven fuera de AppContent para que React conserve su estado entre renders.
+function WorkoutViewWrapper({ routines, ...props }) {
+  const { id } = useParams();
+  const routine = routines.find(r => r.id === id);
+  return <WorkoutView routine={routine} {...props} />;
+}
+
+function EditRoutineViewWrapper({ routines, ...props }) {
+  const { id } = useParams();
+  const routine = routines.find(r => r.id === id);
+  return <EditRoutineView routine={routine} {...props} />;
+}
+
+// Componente Layout para la sección de Planificación
+function PlanningLayout() {
+  const activeTab = "border-b-2 border-primary text-primary text-text";
+  const inactiveTab = "text-muted";
+  return (
+    <div>
+      <div className="px-4 md:px-8 border-b border-border">
+        <nav className="flex gap-4">
+          <NavLink to="/planificacion/calendario" className={({isActive}) => `py-3 font-semibold ${isActive ? activeTab : inactiveTab}`}>Calendario</NavLink>
+          <NavLink to="/planificacion/programas" className={({isActive}) => `py-3 font-semibold ${isActive ? activeTab : inactiveTab}`}>Programas</NavLink>
+        </nav>
+      </div>
+      <Outlet />
+    </div>
+  );
+}
 
 function AppContent({ user }) {
   // Calculamos el rol síncronamente desde el email para no bloquear el render
@@ -38,20 +69,11 @@ function AppContent({ user }) {
   const [userRole, setUserRole] = useState(isAdminEmail ? 'admin' : 'user'); // Rol conocido síncronamente
 
   const [exerciseLibrary, setExerciseLibrary] = useState(initialLibrary);
-  const [selectedRoutine, setSelectedRoutine] = useState(null);
 
   // --- MANEJO DE AUTENTICACIÓN Y DATOS ---
+  // AppContent solo se monta con sesión iniciada: al cerrar sesión se desmonta y su estado se descarta.
   useEffect(() => {
-    if (!user) {
-      setRoutines(initialRoutines);
-      setScheduledRoutines({});
-      setCompletedExercises({});
-      setBodyMetrics([]);
-      setCompletedDays({});
-      setExerciseLogs({});
-      setUserRole('user');
-      return;
-    }
+    if (!user) return;
 
     // Carga paralela: userData + librería global al mismo tiempo
     loadInitialData(user.uid).then(({ userData, library, globalRoutines }) => {
@@ -78,7 +100,7 @@ function AppContent({ user }) {
         { totalDays, totalExercises, lastWeight }
       );
     }).catch(err => console.error("Error cargando datos:", err));
-  }, [user]);
+  }, [user, isAdminEmail]);
 
   // --- EFECTOS PARA GUARDAR DATOS EN FIRESTORE ---
   // Usa useRef para detectar si ya se cargaron los datos (evita guardar en el primer render)
@@ -127,19 +149,16 @@ function AppContent({ user }) {
   const navigate = useNavigate();
 
   const handleSelectRoutine = (routine) => {
-    setSelectedRoutine(routine);
     // Navegamos a una ruta específica para la rutina
     navigate(`/rutina/${routine.id}`);
   };
 
   const handleBackToDashboard = () => {
-    setSelectedRoutine(null);
     navigate('/rutinas');
   };
 
   const handleEditRoutine = (routine) => {
     if (userRole !== 'admin') return; // Protección extra
-    setSelectedRoutine(routine);
     navigate(`/rutina/editar/${routine.id}`);
   };
 
@@ -293,45 +312,6 @@ function AppContent({ user }) {
     });
   };
 
-  // Componentes Wrapper para manejar la obtención de la rutina desde la URL
-  const WorkoutViewWrapper = () => {
-    const { id } = useParams();
-    const routine = routines.find(r => r.id === id);
-    return (
-      <WorkoutView 
-        routine={routine} 
-        onBack={handleBackToDashboard} 
-        completedExercises={completedExercises} 
-        onToggleComplete={handleToggleComplete}
-        exerciseLogs={exerciseLogs}
-        onLogExercise={handleLogExercise}
-      />
-    );
-  };
-
-  const EditRoutineViewWrapper = () => {
-    const { id } = useParams();
-    const routine = routines.find(r => r.id === id);
-    return <EditRoutineView routine={routine} exerciseLibrary={exerciseLibrary} onSave={handleUpdateRoutine} onCancel={handleCancelEdit} onDelete={handleDeleteRoutineById} />;
-  };
-
-  // Componente Layout para la sección de Planificación
-  const PlanningLayout = () => {
-    const activeTab = "border-b-2 border-primary text-primary text-text";
-    const inactiveTab = "text-muted";
-    return (
-      <div>
-        <div className="px-4 md:px-8 border-b border-border">
-          <nav className="flex gap-4">
-            <NavLink to="/planificacion/calendario" className={({isActive}) => `py-3 font-semibold ${isActive ? activeTab : inactiveTab}`}>Calendario</NavLink>
-            <NavLink to="/planificacion/programas" className={({isActive}) => `py-3 font-semibold ${isActive ? activeTab : inactiveTab}`}>Programas</NavLink>
-          </nav>
-        </div>
-        <Outlet />
-      </div>
-    );
-  };
-
   return (
     <div className="flex h-screen bg-bg text-text">
       {/* SideBar para escritorio */}
@@ -352,10 +332,10 @@ function AppContent({ user }) {
           {/* Dashboard: Solo pasamos funciones de edición si es admin */}
           <Route path="/rutinas" element={<Dashboard routines={routines} exerciseLibrary={exerciseLibrary} onSelectRoutine={handleSelectRoutine} onEditRoutine={userRole === 'admin' ? handleEditRoutine : undefined} onCreateRoutine={userRole === 'admin' ? handleCreateRoutine : undefined} onResetRoutines={userRole === 'admin' ? handleResetRoutines : undefined} />} />
           
-          <Route path="/rutina/:id" element={<WorkoutViewWrapper />} />
+          <Route path="/rutina/:id" element={<WorkoutViewWrapper routines={routines} onBack={handleBackToDashboard} completedExercises={completedExercises} onToggleComplete={handleToggleComplete} exerciseLogs={exerciseLogs} onLogExercise={handleLogExercise} />} />
           
           {/* Ruta de Edición: Protegida a nivel de Router */}
-          <Route path="/rutina/editar/:id" element={userRole === 'admin' ? <EditRoutineViewWrapper /> : <Navigate to="/rutinas" />} />
+          <Route path="/rutina/editar/:id" element={userRole === 'admin' ? <EditRoutineViewWrapper routines={routines} exerciseLibrary={exerciseLibrary} onSave={handleUpdateRoutine} onCancel={handleCancelEdit} onDelete={handleDeleteRoutineById} /> :<Navigate to="/rutinas" />} />
           
           <Route path="/progreso" element={<ProgressView routines={routines} completedExercises={completedExercises} completedDays={completedDays} />} />
           <Route path="/metricas" element={<BodyMetricsView metrics={bodyMetrics} onAddMetric={handleAddMetric} onDeleteMetric={handleDeleteMetric} />} />

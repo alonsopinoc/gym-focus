@@ -8,7 +8,7 @@ import {
   User, LogOut, Sun, Moon, X,
   Weight, Target,
 } from 'lucide-react';
-import { useTheme } from '../../ThemeContext.jsx';
+import { useTheme } from '../../ThemeContext.js';
 
 const ROUTINE_TYPES = {
   F:        { label: 'Fuerza',      badge: 'bg-blue-500',    icon: <Dumbbell size={13} />  },

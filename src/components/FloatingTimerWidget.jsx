@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Timer, Play, Pause, X, Maximize2 } from 'lucide-react';
-import { useTimer } from '../TimerContext.jsx';
+import { useTimer } from '../TimerContext.js';
 
 const MODE_LABELS = { AMRAP: 'AMRAP', INTERVALS: 'Intervalos', TABATA: 'Tabata' };
 

@@ -32,7 +32,7 @@ export function LoginPage() {
     setError(null);
     try {
       await signInWithGoogle();
-    } catch (err) {
+    } catch {
       setError('No se pudo iniciar sesión. Intenta de nuevo.');
       setLoading(false);
     }

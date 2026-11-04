@@ -8,7 +8,7 @@ import {
   ChevronLeft, ChevronRight, Dumbbell, Zap, HeartPulse, Star, Repeat, CheckCircle2,
 } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
-import { useTheme } from '../../ThemeContext.jsx';
+import { useTheme } from '../../ThemeContext.js';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement,
   LineElement, Title, Tooltip, Legend,

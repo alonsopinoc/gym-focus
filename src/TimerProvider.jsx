@@ -1,6 +1,5 @@
-import { createContext, useContext, useState, useRef, useEffect } from 'react';
-
-const TimerContext = createContext(null);
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { TimerContext } from './TimerContext.js';
 
 const DEFAULT_CONFIG = { duration: 300, rounds: 8, work: 20, rest: 10 };
 
@@ -20,7 +19,11 @@ export function TimerProvider({ children }) {
 
   useEffect(() => {
     localStorage.setItem('wodTimerType', timerType);
-    try { localStorage.setItem('wodTimerConfig', JSON.stringify(config)); } catch {}
+    try {
+      localStorage.setItem('wodTimerConfig', JSON.stringify(config));
+    } catch {
+      // Sin espacio o almacenamiento bloqueado: la configuración solo dura esta sesión.
+    }
   }, [timerType, config]);
 
   const [timeLeft, setTimeLeft] = useState(0);
@@ -37,7 +40,10 @@ export function TimerProvider({ children }) {
     const saved = localStorage.getItem('wodTimerVolume');
     return saved !== null ? Number(saved) : 0.8;
   });
+  // El ref permite que el timer en curso use siempre el volumen actual sin reiniciar su intervalo.
+  const volumeRef = useRef(volume);
   useEffect(() => {
+    volumeRef.current = volume;
     localStorage.setItem('wodTimerVolume', String(volume));
   }, [volume]);
 
@@ -51,14 +57,14 @@ export function TimerProvider({ children }) {
     };
   }
 
-  const playAudio = (soundKey) => {
+  const playAudio = useCallback((soundKey) => {
     const audio = audioRef.current[soundKey];
     if (audio) {
       audio.currentTime = 0;
-      audio.volume = volume;
+      audio.volume = volumeRef.current;
       audio.play().catch(e => console.error(`Error al reproducir ${soundKey}:`, e));
     }
-  };
+  }, []);
 
   // --- WAKE LOCK (mantiene la pantalla encendida mientras corre) ---
   useEffect(() => {
@@ -123,21 +129,22 @@ export function TimerProvider({ children }) {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [isActive, screen, timerType, config, phase, currentRound]);
+  }, [isActive, screen, timerType, config, phase, currentRound, playAudio]);
 
   // --- CUENTA REGRESIVA INICIAL ---
   useEffect(() => {
     if (screen !== 'countdown') return;
 
-    if (countdown > 0) {
-      const countdownInterval = setInterval(() => setCountdown(prev => prev - 1), 1000);
-      return () => clearInterval(countdownInterval);
-    } else {
-      playAudio('start');
-      setScreen('running');
-      setIsActive(true);
-    }
-  }, [screen, countdown]);
+    const tick = setTimeout(() => {
+      setCountdown(countdown - 1);
+      if (countdown <= 1) {
+        playAudio('start');
+        setScreen('running');
+        setIsActive(true);
+      }
+    }, 1000);
+    return () => clearTimeout(tick);
+  }, [screen, countdown, playAudio]);
 
   const handleStart = () => {
     const unlockAndPlay = async () => {
@@ -147,7 +154,7 @@ export function TimerProvider({ children }) {
           return audio.play().then(() => { audio.pause(); audio.volume = volume; audio.currentTime = 0; });
         });
         await Promise.allSettled(unlockPromises);
-      } catch (e) {
+      } catch {
         console.warn('No se pudo pre-activar el audio.');
       }
       setTimeout(() => playAudio('countdown'), 1000);
@@ -228,10 +235,4 @@ export function TimerProvider({ children }) {
   };
 
   return <TimerContext.Provider value={value}>{children}</TimerContext.Provider>;
-}
-
-export function useTimer() {
-  const ctx = useContext(TimerContext);
-  if (!ctx) throw new Error('useTimer debe usarse dentro de <TimerProvider>');
-  return ctx;
 }
