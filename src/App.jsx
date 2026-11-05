@@ -17,6 +17,7 @@ import { ProgramView } from './components/ProgramView';
 import { buildProgram, dateKey, findSession, hasSessionDoneOn, markSessionDone, markSessionPending, setSessionRoutine, updateProgram } from './program';
 import { toggleSeries } from './circuit';
 import { normalizeRoutines } from './routineData';
+import { createSaveQueue } from './saveQueue';
 import { LoginPage } from './LoginPage';
 import initialRoutines from './data/rutinas_data.json';
 import { AdminUsersView } from './components/AdminUsersView';
@@ -146,13 +147,26 @@ function AppContent({ user }) {
 
   // --- EFECTOS PARA GUARDAR DATOS EN FIRESTORE ---
 
+  // Ver saveQueue.js: agrupa los guardados y no los pierde si la app se cierra antes.
+  const [saveQueue] = useState(() => createSaveQueue(`gymfocus_sin_guardar_${user.uid}`));
+  const scheduleSave = saveQueue.schedule;
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') saveQueue.flush();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pagehide', saveQueue.flush);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pagehide', saveQueue.flush);
+    };
+  }, [saveQueue]);
+
   const useDebouncedSave = (dataKey, data, delay = 2000) => {
     useEffect(() => {
       if (!user || !dataLoaded.current) return;
-      const handler = setTimeout(() => {
-        saveUserData(user.uid, dataKey, data).catch(err => console.error(`Error guardando ${dataKey}:`, err));
-      }, delay);
-      return () => clearTimeout(handler);
+      scheduleSave(dataKey, data, () => saveUserData(user.uid, dataKey, data), delay);
     }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
   };
 
@@ -168,22 +182,35 @@ function AppContent({ user }) {
   // Guardar rutinas globales SOLO si es admin (debounce largo — cambian poco)
   useEffect(() => {
     if (!user || userRole !== 'admin' || !dataLoaded.current) return;
-    const handler = setTimeout(() => { saveGlobalRoutines(routines).catch(err => console.error('Error guardando rutinas:', err)); }, 3000);
-    return () => clearTimeout(handler);
+    scheduleSave('routines', routines, () => saveGlobalRoutines(routines), 3000);
   }, [routines]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Guardar librería global SOLO si es admin
   useEffect(() => {
     if (!user || userRole !== 'admin' || !dataLoaded.current) return;
-    const handler = setTimeout(() => { saveGlobalLibrary(exerciseLibrary).catch(err => console.error('Error guardando librería:', err)); }, 3000);
-    return () => clearTimeout(handler);
+    scheduleSave('exerciseLibrary', exerciseLibrary, () => saveGlobalLibrary(exerciseLibrary), 3000);
   }, [exerciseLibrary]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Va después de los guardados: en el render que trae lo cargado, esos efectos aún ven
   // dataLoaded=false y no reescriben en Firestore lo que se acaba de leer.
   useEffect(() => {
-    if (loadedAt) dataLoaded.current = true;
-  }, [loadedAt]);
+    if (!loadedAt) return;
+    dataLoaded.current = true;
+
+    // Cambios que no alcanzaron a llegar a Firestore la última vez que se cerró la app:
+    // se aplican sobre lo cargado, y los efectos de arriba los vuelven a guardar.
+    const setters = {
+      scheduledRoutines: setScheduledRoutines,
+      completedExercises: setCompletedExercises,
+      bodyMetrics: setBodyMetrics,
+      completedDays: setCompletedDays,
+      exerciseLogs: setExerciseLogs,
+      program: setProgram,
+      circuitProgress: setCircuitProgress,
+      ...(userRole === 'admin' && { routines: setRoutines, exerciseLibrary: setExerciseLibrary }),
+    };
+    Object.entries(saveQueue.readUnsaved()).forEach(([key, { value }]) => setters[key]?.(value));
+  }, [loadedAt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const navigate = useNavigate();
 
