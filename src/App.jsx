@@ -75,13 +75,21 @@ function AppContent({ user }) {
 
   const [exerciseLibrary, setExerciseLibrary] = useState(initialLibrary);
 
+  // Solo se guarda después de cargar lo que hay en Firestore: guardar antes reemplazaría
+  // los datos reales con el estado vacío inicial. Si la carga falla, no se guarda nada.
+  const dataLoaded = React.useRef(false);
+  const [loadedAt, setLoadedAt] = useState(0);
+
   // --- MANEJO DE AUTENTICACIÓN Y DATOS ---
   // AppContent solo se monta con sesión iniciada: al cerrar sesión se desmonta y su estado se descarta.
   useEffect(() => {
     if (!user) return;
+    dataLoaded.current = false;
+    let cancelled = false;
 
     // Carga paralela: userData + librería global al mismo tiempo
     loadInitialData(user.uid).then(({ userData, library, globalRoutines }) => {
+      if (cancelled) return;
       // Rutinas: admin usa las globales si existen, usuarios normales usan las suyas
       if (isAdminEmail) {
         setRoutines(normalizeRoutines(globalRoutines || initialRoutines));
@@ -92,10 +100,12 @@ function AppContent({ user }) {
       setCompletedExercises(userData?.completedExercises || {});
       setBodyMetrics(userData?.bodyMetrics || []);
       setCompletedDays(userData?.completedDays || {});
+      setExerciseLogs(userData?.exerciseLogs || {});
       setProgram(userData?.program || null);
       setCircuitProgress(userData?.circuitProgress || {});
       if (!isAdminEmail) setUserRole(userData?.role || 'user');
       if (library) setExerciseLibrary(library);
+      setLoadedAt(Date.now());
 
       // Guardar perfil ligero para la lista de admin (fuera del render crítico)
       const totalDays      = Object.keys(userData?.completedDays || {}).length;
@@ -107,12 +117,10 @@ function AppContent({ user }) {
         { totalDays, totalExercises, lastWeight }
       );
     }).catch(err => console.error("Error cargando datos:", err));
+    return () => { cancelled = true; };
   }, [user, isAdminEmail]);
 
   // --- EFECTOS PARA GUARDAR DATOS EN FIRESTORE ---
-  // Usa useRef para detectar si ya se cargaron los datos (evita guardar en el primer render)
-  const dataLoaded = React.useRef(false);
-  useEffect(() => { if (user) dataLoaded.current = false; }, [user]);
 
   const useDebouncedSave = (dataKey, data, delay = 2000) => {
     useEffect(() => {
@@ -123,14 +131,6 @@ function AppContent({ user }) {
       return () => clearTimeout(handler);
     }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
   };
-
-  // Marcamos datos como cargados después del efecto de carga
-  useEffect(() => {
-    if (user) {
-      const t = setTimeout(() => { dataLoaded.current = true; }, 3000);
-      return () => clearTimeout(t);
-    }
-  }, [user]);
 
   useDebouncedSave('scheduledRoutines', scheduledRoutines);
   useDebouncedSave('completedExercises', completedExercises);
@@ -154,6 +154,12 @@ function AppContent({ user }) {
     const handler = setTimeout(() => { saveGlobalLibrary(exerciseLibrary); }, 3000);
     return () => clearTimeout(handler);
   }, [exerciseLibrary]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Va después de los guardados: en el render que trae lo cargado, esos efectos aún ven
+  // dataLoaded=false y no reescriben en Firestore lo que se acaba de leer.
+  useEffect(() => {
+    if (loadedAt) dataLoaded.current = true;
+  }, [loadedAt]);
 
   const navigate = useNavigate();
 

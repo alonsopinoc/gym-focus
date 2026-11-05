@@ -11,7 +11,9 @@ export const loadUserData = async (userId) => {
 
 export const saveUserData = async (userId, dataKey, data) => {
   if (!userId) return;
-  await setDoc(doc(db, 'users', userId), { [dataKey]: data }, { merge: true });
+  // mergeFields reemplaza el campo completo: con merge:true los mapas se mezclan
+  // y lo que se borra localmente (p. ej. un ejercicio desmarcado) seguía en Firestore.
+  await setDoc(doc(db, 'users', userId), { [dataKey]: data }, { mergeFields: [dataKey] });
 };
 
 // ─── Perfil ligero (para lista de admin) ─────────────────────────────────────
