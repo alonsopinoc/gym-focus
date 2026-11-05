@@ -355,11 +355,11 @@ export function CalendarView({ routines, scheduledRoutines, onScheduleRoutine, o
       {/* ── Modal / Bottom sheet ────────────────────────────── */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center"
+          className="fixed inset-0 bg-black/60 z-[70] flex items-end sm:items-center justify-center"
           onClick={e => e.target === e.currentTarget && setIsModalOpen(false)}
         >
           <div className={clsx(
-            'bg-surface w-full sm:w-[30rem] md:w-[36rem] rounded-t-3xl sm:rounded-lg border-t sm:border border-border p-6 max-h-[85vh] flex flex-col',
+            'bg-surface w-full sm:w-[30rem] md:w-[36rem] rounded-t-3xl sm:rounded-lg border-t sm:border border-border p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6 max-h-[85vh] flex flex-col',
             modalView !== 'details' && 'sm:h-[36rem]'
           )}>
 

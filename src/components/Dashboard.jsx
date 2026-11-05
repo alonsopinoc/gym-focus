@@ -213,9 +213,9 @@ function CreateRoutineModal({ onClose, onCreate, library }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center"
+    <div className="fixed inset-0 bg-black/60 z-[70] flex items-end sm:items-center justify-center"
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-surface w-full sm:w-[480px] rounded-t-3xl sm:rounded-lg border-t sm:border border-border flex flex-col max-h-[90vh]">
+      <div className="bg-surface w-full sm:w-[480px] rounded-t-3xl sm:rounded-lg border-t sm:border border-border flex flex-col max-h-[90vh] pb-[env(safe-area-inset-bottom)] sm:pb-0">
 
         {/* ── Header modal ── */}
         {!showLib && (

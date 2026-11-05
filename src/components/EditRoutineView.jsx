@@ -34,9 +34,9 @@ function LibraryPicker({ library, onSelect, onClose }) {
   });
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center"
+    <div className="fixed inset-0 bg-black/60 z-[70] flex items-end sm:items-center justify-center"
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-surface w-full sm:w-[460px] rounded-t-3xl sm:rounded-lg border-t sm:border border-border flex flex-col max-h-[80vh]">
+      <div className="bg-surface w-full sm:w-[460px] rounded-t-3xl sm:rounded-lg border-t sm:border border-border flex flex-col max-h-[80vh] pb-[env(safe-area-inset-bottom)] sm:pb-0">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0">
           <button onClick={onClose} className="p-1.5 rounded-full hover:bg-surface2 text-muted">
             <X size={16} />
@@ -300,7 +300,7 @@ function AddExerciseControls({ onOpenLibrary, onAdd }) {
 
 function DeleteModal({ routineName, onConfirm, onCancel }) {
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+    <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center px-4">
       <div className="bg-surface border border-border rounded-lg p-6 w-full max-w-sm space-y-4">
         <h3 className="font-bold text-lg">Eliminar rutina</h3>
         <p className="text-sm text-muted">

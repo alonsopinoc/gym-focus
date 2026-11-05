@@ -31,7 +31,7 @@ function getUsageInRoutines(exerciseName, routines) {
 // ─── Modal de confirmación de borrado ────────────────────────────────────────
 function DeleteConfirmModal({ exercise, usedIn, onConfirm, onCancel }) {
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4">
       <div className="bg-surface w-full max-w-sm rounded-lg border border-border p-6 space-y-4">
         <div className="flex items-start gap-3">
           <div className="bg-danger/10 p-2 rounded-xl shrink-0">

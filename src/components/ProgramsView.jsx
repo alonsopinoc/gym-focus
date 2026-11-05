@@ -35,7 +35,7 @@ export function ProgramsView({ onApplyProgram }) {
 
       {/* Modal para seleccionar fecha de inicio */}
       {selectedProgram && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4">
           <div className="bg-surface2 rounded-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-white">Seleccionar Inicio</h2>

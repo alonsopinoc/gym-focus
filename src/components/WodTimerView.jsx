@@ -98,7 +98,7 @@ export function WodTimerView() {
 
   if (screen === 'countdown') {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center z-50 text-text bg-bg pb-20 md:pb-0">
+      <div className="relative min-h-full flex flex-col items-center justify-center text-text bg-bg py-20 md:py-0 md:fixed md:inset-0 md:z-50">
         <div className="absolute top-6 right-6 flex items-center gap-2">
           <button onClick={handleMinimize} title="Minimizar"
             className="hidden md:flex p-2 bg-bg/10 rounded-full hover:bg-bg/20 transition-colors">
@@ -121,7 +121,7 @@ export function WodTimerView() {
     const isRest = timerType === 'TABATA' && phase === 'REST';
     return (
       <div className={clsx(
-        "fixed inset-0 flex flex-col items-center justify-center z-50 transition-colors duration-500 px-6 pb-20 md:pb-0",
+        "relative min-h-full flex flex-col items-center justify-center transition-colors duration-500 px-6 py-20 md:py-0 md:fixed md:inset-0 md:z-50",
         isRest
           ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
           : 'bg-bg text-text',

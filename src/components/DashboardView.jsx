@@ -141,7 +141,7 @@ export function DashboardView({ routines, scheduledRoutines, completedExercises,
 
         {/* ── Bottom sheet perfil (mobile) ── */}
         {showProfile && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:hidden"
+          <div className="fixed inset-0 bg-black/50 z-[70] flex items-end md:hidden"
             onClick={e => e.target === e.currentTarget && setShowProfile(false)}>
             <div className="bg-surface w-full rounded-t-3xl border-t border-border p-6 space-y-4"
               style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>

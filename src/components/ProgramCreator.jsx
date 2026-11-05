@@ -409,9 +409,9 @@ export function ProgramCreator({ routines, hasExisting, editingProgram, onCreate
 
       {/* ── Modal confirmación ── */}
       {showConfirm && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4"
+        <div className="fixed inset-0 bg-black/60 z-[70] flex items-end sm:items-center justify-center sm:p-4"
           onClick={e => e.target === e.currentTarget && setShowConfirm(false)}>
-          <div className="bg-surface w-full sm:max-w-md rounded-t-3xl sm:rounded-lg border-t sm:border border-border p-6 space-y-4">
+          <div className="bg-surface w-full sm:max-w-md rounded-t-3xl sm:rounded-lg border-t sm:border border-border p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6 space-y-4">
             <div className="flex items-start gap-3">
               <div className="bg-primary/10 p-2.5 rounded-xl shrink-0">
                 <CalendarDays size={20} className="text-primary" />
