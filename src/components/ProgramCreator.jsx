@@ -1,35 +1,17 @@
 import { useState } from 'react';
 import { clsx } from 'clsx';
 import {
-  Dumbbell, Zap, HeartPulse, Star, Repeat, ChevronRight, ChevronLeft,
-  Plus, Minus, Wand2, X, CheckCircle2, CalendarDays, ArrowLeft,
-  Weight, Target,
+  ChevronRight, ChevronLeft, Plus, Minus, Wand2, CheckCircle2, CalendarDays, ArrowLeft,
 } from 'lucide-react';
+import { ROUTINE_TYPES } from '../routineTypes';
+import { addDays, dateKey, getDoneCounts, parseDateKey, programToDraft } from '../program';
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
-const ROUTINE_TYPES = {
-  F:        { label: 'Fuerza',      badge: 'bg-blue-500',    border: 'border-blue-500',    icon: Dumbbell   },
-  F_BASICOS:{ label: 'Básicos F',   badge: 'bg-sky-400',     border: 'border-sky-400',     icon: Star       },
-  HIBRIDA:  { label: 'Híbrido',     badge: 'bg-purple-500',  border: 'border-purple-500',  icon: Repeat     },
-  M:        { label: 'Metabólico',  badge: 'bg-red-500',     border: 'border-red-500',     icon: Zap        },
-  AM:       { label: 'Activación',  badge: 'bg-emerald-500', border: 'border-emerald-500', icon: HeartPulse },
-  RM:       { label: 'Resistencia', badge: 'bg-orange-500',  border: 'border-orange-500',  icon: HeartPulse },
-  K:        { label: 'Kettlebell',  badge: 'bg-amber-500',   border: 'border-amber-500',   icon: Weight     },
-  B:        { label: 'Básico',      badge: 'bg-teal-500',    border: 'border-teal-500',    icon: Target     },
-};
-
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const WEEKDAYS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-const START_DAYS = [
-  { value: 1, label: 'Lunes'     },
-  { value: 2, label: 'Martes'    },
-  { value: 3, label: 'Miércoles' },
-  { value: 4, label: 'Jueves'    },
-  { value: 5, label: 'Viernes'   },
-];
 
-function toKey(d) { return d.toISOString().split('T')[0]; }
+const toKey = dateKey;
 
 // ─── Mini calendario (sin librería) ──────────────────────────────────────────
 
@@ -92,12 +74,12 @@ function MiniCalendar({ value, onChange }) {
 
 // ─── Stepper de cantidad ──────────────────────────────────────────────────────
 
-function Counter({ value, onChange, max = 7 }) {
+function Counter({ value, onChange, min = 0, max = 7 }) {
   return (
     <div className="flex items-center gap-2">
       <button
-        onClick={() => onChange(Math.max(0, value - 1))}
-        disabled={value === 0}
+        onClick={() => onChange(Math.max(min, value - 1))}
+        disabled={value <= min}
         className="w-7 h-7 rounded-full border border-border flex items-center justify-center text-muted hover:border-primary hover:text-primary disabled:opacity-30 transition-all">
         <Minus size={12} />
       </button>
@@ -114,46 +96,30 @@ function Counter({ value, onChange, max = 7 }) {
 
 // ─── Vista previa del programa ────────────────────────────────────────────────
 
-function ProgramPreview({ program, startDate, startDayOfWeek }) {
-  // Reconstruye las fechas que se agendarían
-  const entries = [];
-  let current = new Date(startDate);
-
-  program.semanas.forEach((weekData, wi) => {
-    while (current.getDay() !== startDayOfWeek) current.setDate(current.getDate() + 1);
-    const queue = [];
-    Object.entries(weekData.plan).forEach(([type, count]) => {
-      for (let i = 0; i < count; i++) queue.push(type);
-    });
-    queue.forEach(tipo => {
-      while (current.getDay() === 0 || current.getDay() === 6)
-        current.setDate(current.getDate() + 1);
-      entries.push({ date: new Date(current), tipo, week: wi + 1 });
-      current.setDate(current.getDate() + 1);
-    });
-  });
-
-  if (entries.length === 0) {
-    return <p className="text-sm text-muted text-center py-6">Sin sesiones configuradas.</p>;
-  }
+function ProgramPreview({ program, startDate }) {
+  const startKey = dateKey(startDate);
+  const formatDay = (key) =>
+    new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' }).format(parseDateKey(key));
+  const weeks = Array.from({ length: program.repeticiones }, () => program.semanas).flat();
 
   return (
-    <div className="space-y-1.5 max-h-64 overflow-y-auto">
-      {entries.map((e, i) => {
-        const type = ROUTINE_TYPES[e.tipo];
-        const Icon = type?.icon;
+    <div className="space-y-1.5 max-h-80 overflow-y-auto">
+      {weeks.map((week, index) => {
+        const start = addDays(startKey, index * 7);
+        const chips = Object.entries(week.plan).filter(([, count]) => count > 0);
         return (
-          <div key={i} className="flex items-center gap-3 px-3 py-2 bg-surface2 rounded-xl">
-            {Icon && (
-              <div className={clsx("w-7 h-7 rounded-lg flex items-center justify-center text-white shrink-0", type.badge)}>
-                <Icon size={13} />
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold">
-                {new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }).format(e.date)}
-              </p>
-              <p className="text-[10px] text-muted">Semana {e.week} · {type?.label}</p>
+          <div key={index} className="px-3 py-2 bg-surface2 rounded-xl">
+            <p className="text-xs font-semibold">
+              Semana {index + 1}
+              <span className="font-normal text-muted"> · {formatDay(start)} al {formatDay(addDays(start, 6))}</span>
+            </p>
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {chips.length === 0 && <span className="text-[10px] text-muted">Sin sesiones</span>}
+              {chips.map(([tipo, count]) => (
+                <span key={tipo} className={clsx("text-[10px] font-bold text-white px-2 py-0.5 rounded-full", ROUTINE_TYPES[tipo]?.badge)}>
+                  {count} {ROUTINE_TYPES[tipo]?.label}
+                </span>
+              ))}
             </div>
           </div>
         );
@@ -168,20 +134,31 @@ const DEFAULT_PROGRAM = {
   titulo: '',
   descripcion: '',
   semanas: [{ plan: {} }, { plan: {} }, { plan: {} }, { plan: {} }],
+  repeticiones: 1,
 };
 
-export function ProgramCreator({ onApplyProgram }) {
+export function ProgramCreator({ routines, hasExisting, editingProgram, onCreate, onCancel }) {
+  const isEditing = Boolean(editingProgram);
   const [step,          setStep]          = useState(1); // 1: info, 2: semanas, 3: aplicar
-  const [program,       setProgram]       = useState(DEFAULT_PROGRAM);
+  const [program,       setProgram]       = useState(() => isEditing ? programToDraft(editingProgram) : DEFAULT_PROGRAM);
   const [startDate,     setStartDate]     = useState(() => {
+    if (isEditing) return parseDateKey(editingProgram.startDate);
     const d = new Date(); d.setHours(0,0,0,0); return d;
   });
-  const [startDay,      setStartDay]      = useState(1);
   const [showConfirm,   setShowConfirm]   = useState(false);
 
-  const totalSessions = program.semanas.reduce((acc, w) =>
+  // Lo ya hecho no se puede quitar: fija los mínimos de cada semana y tipo.
+  const doneCounts = isEditing ? getDoneCounts(editingProgram) : [];
+  const minWeeks = Math.max(1, doneCounts.reduce((last, counts, index) => (Object.keys(counts).length > 0 ? index + 1 : last), 0));
+  const hasProgress = doneCounts.some(counts => Object.keys(counts).length > 0);
+  const maxWeeks = Math.max(12, program.semanas.length);
+
+  const availableTypes = Object.entries(ROUTINE_TYPES).filter(([key]) => routines.some(r => r.tipo === key));
+  const cycleSessions = program.semanas.reduce((acc, w) =>
     acc + Object.values(w.plan).reduce((a, b) => a + b, 0), 0
   );
+  const totalSessions = cycleSessions * program.repeticiones;
+  const totalWeeks = program.semanas.length * program.repeticiones;
   const canNext1 = program.titulo.trim().length > 0;
   const canNext2 = totalSessions > 0;
 
@@ -194,7 +171,7 @@ export function ProgramCreator({ onApplyProgram }) {
   };
 
   const setNumWeeks = (n) => {
-    const num = Math.min(12, Math.max(1, n));
+    const num = Math.min(maxWeeks, Math.max(minWeeks, n));
     setProgram(p => ({
       ...p,
       semanas: Array.from({ length: num }, (_, i) => p.semanas[i] || { plan: {} }),
@@ -206,13 +183,17 @@ export function ProgramCreator({ onApplyProgram }) {
     if (weekIndex === 0) return;
     setProgram(p => {
       const semanas = [...p.semanas];
-      semanas[weekIndex] = { plan: { ...semanas[weekIndex - 1].plan } };
+      const plan = { ...semanas[weekIndex - 1].plan };
+      Object.entries(doneCounts[weekIndex] || {}).forEach(([tipo, done]) => {
+        plan[tipo] = Math.max(plan[tipo] || 0, done);
+      });
+      semanas[weekIndex] = { plan };
       return { ...p, semanas };
     });
   };
 
   const handleApply = () => {
-    onApplyProgram(program, startDate, startDay);
+    onCreate(program, startDate);
     setShowConfirm(false);
     setStep(1);
     setProgram(DEFAULT_PROGRAM);
@@ -227,14 +208,14 @@ export function ProgramCreator({ onApplyProgram }) {
       {/* Header */}
       <div className="px-4 md:px-6 pt-5 pb-4 border-b border-border shrink-0">
         <div className="flex items-center gap-3">
-          {step > 1 && (
-            <button onClick={() => setStep(s => s - 1)}
+          {(step > 1 || onCancel) && (
+            <button onClick={() => (step > 1 ? setStep(s => s - 1) : onCancel())} aria-label="Volver"
               className="p-2 rounded-full hover:bg-surface2 text-muted hover:text-text transition-colors shrink-0">
               <ArrowLeft size={18} />
             </button>
           )}
           <div className="flex-1">
-            <h1 className="font-display text-2xl">Crear Programa</h1>
+            <h1 className="font-display text-2xl">{isEditing ? 'Modificar programa' : 'Crear Programa'}</h1>
             <p className="text-xs text-muted mt-0.5">
               {step === 1 && 'Paso 1 de 3 — Información básica'}
               {step === 2 && 'Paso 2 de 3 — Planificación semanal'}
@@ -285,17 +266,37 @@ export function ProgramCreator({ onApplyProgram }) {
             <div>
               <label className="text-xs font-semibold text-muted block mb-3">Número de semanas</label>
               <div className="flex items-center gap-4">
-                <Counter value={program.semanas.length} onChange={setNumWeeks} max={12} />
+                <Counter value={program.semanas.length} onChange={setNumWeeks} min={minWeeks} max={maxWeeks} />
                 <span className="text-sm text-muted">{program.semanas.length} {program.semanas.length === 1 ? 'semana' : 'semanas'}</span>
               </div>
+              {isEditing && minWeeks > 1 && (
+                <p className="text-xs text-muted mt-2">Mínimo {minWeeks} semanas, porque ya tienes sesiones hechas hasta ahí.</p>
+              )}
             </div>
+            {!isEditing && <div>
+              <label className="text-xs font-semibold text-muted block mb-3">Repetir estas semanas</label>
+              <div className="flex items-center gap-4">
+                <Counter
+                  value={program.repeticiones}
+                  min={1}
+                  max={6}
+                  onChange={repeticiones => setProgram(p => ({ ...p, repeticiones }))}
+                />
+                <span className="text-sm text-muted">
+                  {program.repeticiones} {program.repeticiones === 1 ? 'vez' : 'veces'} · {totalWeeks} {totalWeeks === 1 ? 'semana' : 'semanas'} en total
+                </span>
+              </div>
+            </div>}
           </div>
         )}
 
         {/* ── Paso 2: Planificación ── */}
         {step === 2 && (
           <div className="space-y-4">
-            <p className="text-xs text-muted">Define cuántas sesiones de cada tipo tendrá cada semana. Puedes copiar el plan de la semana anterior.</p>
+            <p className="text-xs text-muted">
+              Define cuántas sesiones de cada tipo tendrá cada semana. Luego eliges cada día cuál hacer, incluidos los fines de semana.
+              {hasProgress && ' Las sesiones ya hechas no se pueden quitar.'}
+            </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {program.semanas.map((week, wi) => {
@@ -322,7 +323,7 @@ export function ProgramCreator({ onApplyProgram }) {
 
                     {/* Tipos */}
                     <div className="divide-y divide-border">
-                      {Object.entries(ROUTINE_TYPES).map(([key, { label, badge, icon: Icon }]) => {
+                      {availableTypes.map(([key, { label, badge, icon: Icon }]) => {
                         const val = week.plan[key] || 0;
                         return (
                           <div key={key} className="flex items-center justify-between px-4 py-2.5">
@@ -332,7 +333,7 @@ export function ProgramCreator({ onApplyProgram }) {
                               </div>
                               <span className={clsx("text-sm", val > 0 ? "font-semibold" : "text-muted")}>{label}</span>
                             </div>
-                            <Counter value={val} onChange={v => handlePlanChange(wi, key, v)} />
+                            <Counter value={val} min={doneCounts[wi]?.[key] || 0} onChange={v => handlePlanChange(wi, key, v)} />
                           </div>
                         );
                       })}
@@ -348,27 +349,22 @@ export function ProgramCreator({ onApplyProgram }) {
         {step === 3 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
 
-            {/* Fecha y día de inicio */}
-            <div className="space-y-5">
-              <div className="bg-surface border border-border rounded-lg p-4">
-                <p className="text-xs font-semibold text-muted mb-3 border-l-2 border-primary pl-2">Fecha de inicio</p>
-                <MiniCalendar value={startDate} onChange={setStartDate} />
-              </div>
-
-              <div className="bg-surface border border-border rounded-lg p-4">
-                <p className="text-xs font-semibold text-muted mb-3 border-l-2 border-primary pl-2">Empezar los entrenamientos en</p>
-                <div className="grid grid-cols-5 gap-1">
-                  {START_DAYS.map(({ value, label }) => (
-                    <button key={value} onClick={() => setStartDay(value)}
-                      className={clsx(
-                        "py-2 rounded-xl text-xs font-semibold transition-all",
-                        startDay === value ? "bg-primary text-white" : "bg-surface2 text-muted hover:text-text"
-                      )}>
-                      {label.slice(0, 3)}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            {/* Fecha de inicio */}
+            <div className="bg-surface border border-border rounded-lg p-4 self-start">
+              <p className="text-xs font-semibold text-muted mb-3 border-l-2 border-primary pl-2">Fecha de inicio</p>
+              {hasProgress ? (
+                <>
+                  <p className="text-sm font-semibold">
+                    {new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(startDate)}
+                  </p>
+                  <p className="text-xs text-muted mt-2">No se puede cambiar porque ya tienes sesiones hechas.</p>
+                </>
+              ) : (
+                <>
+                  <MiniCalendar value={startDate} onChange={setStartDate} />
+                  <p className="text-xs text-muted mt-3">Cada semana del programa dura 7 días desde esta fecha.</p>
+                </>
+              )}
             </div>
 
             {/* Preview */}
@@ -379,7 +375,7 @@ export function ProgramCreator({ onApplyProgram }) {
                   {totalSessions} sesiones
                 </span>
               </div>
-              <ProgramPreview program={program} startDate={startDate} startDayOfWeek={startDay} />
+              <ProgramPreview program={program} startDate={startDate} />
             </div>
           </div>
         )}
@@ -406,7 +402,7 @@ export function ProgramCreator({ onApplyProgram }) {
             onClick={() => setShowConfirm(true)}
             className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold text-sm py-2.5 px-6 rounded-xl transition-colors">
             <Wand2 size={15} />
-            Aplicar al calendario
+            {isEditing ? 'Guardar cambios' : 'Crear programa'}
           </button>
         )}
       </div>
@@ -421,14 +417,19 @@ export function ProgramCreator({ onApplyProgram }) {
                 <CalendarDays size={20} className="text-primary" />
               </div>
               <div>
-                <h3 className="font-bold text-base">Aplicar programa</h3>
+                <h3 className="font-bold text-base">{isEditing ? 'Guardar cambios' : 'Crear programa'}</h3>
                 <p className="text-sm text-muted mt-1">
-                  <strong className="text-text">"{program.titulo}"</strong> — {totalSessions} sesiones a partir del{' '}
+                  <strong className="text-text">"{program.titulo}"</strong> — {totalSessions} sesiones en {totalWeeks} {totalWeeks === 1 ? 'semana' : 'semanas'} a partir del{' '}
                   <strong className="text-text">
                     {new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long' }).format(startDate)}
                   </strong>.
                 </p>
-                <p className="text-xs text-muted mt-2">Las rutinas existentes en esas fechas serán sobreescritas.</p>
+                {isEditing && (
+                  <p className="text-xs text-muted mt-2">Se conservan las sesiones hechas y las rutinas que ya elegiste. Si bajas una cantidad, se quitan sesiones pendientes de ese tipo.</p>
+                )}
+                {!isEditing && hasExisting && (
+                  <p className="text-xs text-danger mt-2">Reemplazará tu programa actual y se perderá su avance. Tu calendario no cambia.</p>
+                )}
               </div>
             </div>
             <div className="flex gap-2">

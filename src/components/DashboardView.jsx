@@ -9,6 +9,7 @@ import {
   Weight, Target,
 } from 'lucide-react';
 import { useTheme } from '../../ThemeContext.js';
+import { countDone, getCurrentWeekIndex, getProgramStatus, getUpcomingSessions, parseDateKey } from '../program';
 
 const ROUTINE_TYPES = {
   F:        { label: 'Fuerza',      badge: 'bg-blue-500',    icon: <Dumbbell size={13} />  },
@@ -55,7 +56,7 @@ function buildWeekStrip(scheduledRoutines, completedDays, routines) {
   });
 }
 
-export function DashboardView({ routines, scheduledRoutines, completedExercises, bodyMetrics, completedDays, user, onLogout }) {
+export function DashboardView({ routines, scheduledRoutines, completedExercises, bodyMetrics, completedDays, program, user, onLogout }) {
   const { theme, toggleTheme } = useTheme();
   const [showProfile, setShowProfile] = useState(false);
   const today    = new Date();
@@ -72,6 +73,22 @@ export function DashboardView({ routines, scheduledRoutines, completedExercises,
   const streak          = getStreak(completedDays);
   const lastMetric      = bodyMetrics.length > 0 ? bodyMetrics[bodyMetrics.length - 1] : null;
   const weekStrip       = buildWeekStrip(scheduledRoutines, completedDays, routines);
+  const programWeekIndex = program && getProgramStatus(program) === 'active' ? getCurrentWeekIndex(program) : null;
+  const programWeek     = programWeekIndex !== null ? program.weeks[programWeekIndex] : null;
+  const programPending  = programWeek ? programWeek.sessions.length - countDone(programWeek.sessions) : 0;
+  const programStart    = program && getProgramStatus(program) === 'upcoming'
+    ? new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }).format(parseDateKey(program.startDate))
+    : null;
+
+  // Sesiones del programa: no tienen día asignado, así que se muestran por semana.
+  const upcomingProgram = program ? getUpcomingSessions(program) : null;
+  const programLabel = !upcomingProgram ? ''
+    : upcomingProgram.isCurrentWeek ? 'Esta semana · cuando quieras'
+    : `Desde ${new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }).format(parseDateKey(upcomingProgram.startsOn))}`;
+  const programRows = (upcomingProgram?.sessions || []).map(session => ({
+    session,
+    routine: routines.find(routine => routine.id === session.routineId),
+  }));
 
   // Próximos 5 días con rutina (excluyendo hoy)
   const upcoming = [];
@@ -162,6 +179,18 @@ export function DashboardView({ routines, scheduledRoutines, completedExercises,
           </div>
         )}
 
+        {/* ── Programa de esta semana ── */}
+        {programWeek && todayRoutine && (
+          <Link to="/programa"
+            className="bg-surface border border-border rounded-lg p-4 flex items-center justify-between gap-3 hover:border-primary transition-colors">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-muted">Semana {programWeekIndex + 1} de {program.weeks.length} · {program.titulo}</p>
+              <p className="font-bold mt-0.5">{countDone(programWeek.sessions)} de {programWeek.sessions.length} sesiones hechas</p>
+            </div>
+            <ChevronRight size={18} className="text-muted shrink-0" />
+          </Link>
+        )}
+
         {/* ── Card de hoy ── */}
         {todayRoutine ? (
           isTodayDone ? (
@@ -207,16 +236,26 @@ export function DashboardView({ routines, scheduledRoutines, completedExercises,
           )
         ) : (
           <div className="bg-surface border border-border rounded-lg p-5 flex items-center gap-4">
-            <div className="bg-surface2 rounded-xl p-3 shrink-0">
-              <CalendarX2 size={22} className="text-muted" />
+            <div className={clsx("rounded-xl p-3 shrink-0", programPending > 0 ? "bg-primary/10" : "bg-surface2")}>
+              {programPending > 0
+                ? <CalendarDays size={22} className="text-primary" />
+                : <CalendarX2 size={22} className="text-muted" />}
             </div>
-            <div className="flex-1">
-              <p className="font-semibold">Sin entrenamiento hoy</p>
-              <p className="text-sm text-muted mt-0.5">Descansa o planifica tu semana.</p>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold">
+                {programPending > 0 ? 'Elige tu sesión de hoy' : programWeek ? 'Semana completada' : 'Sin entrenamiento hoy'}
+              </p>
+              <p className="text-sm text-muted mt-0.5">
+                {programWeek
+                  ? `Semana ${programWeekIndex + 1} de ${program.weeks.length} · ${programPending > 0 ? `te ${programPending === 1 ? 'queda 1 sesión' : `quedan ${programPending} sesiones`}` : 'no te quedan sesiones'}`
+                  : programStart
+                    ? `"${program.titulo}" empieza el ${programStart}.`
+                    : 'Descansa o planifica tu semana.'}
+              </p>
             </div>
-            <Link to="/planificacion/calendario"
+            <Link to="/programa"
               className="shrink-0 text-xs font-semibold text-primary hover:underline">
-              Planificar
+              {programPending > 0 ? 'Elegir' : program ? 'Ver programa' : 'Planificar'}
             </Link>
           </div>
         )}
@@ -281,7 +320,29 @@ export function DashboardView({ routines, scheduledRoutines, completedExercises,
           {/* Próximos */}
           <div className="bg-surface border border-border rounded-lg p-4">
             <p className="text-xs font-semibold text-muted mb-3 border-l-2 border-primary pl-2">Próximos</p>
-            {upcoming.length === 0 ? (
+            {programRows.length > 0 && (
+              <div className={clsx("space-y-2", upcoming.length > 0 && "mb-2")}>
+                {programRows.map(({ session, routine }) => {
+                  const type = ROUTINE_TYPES[session.tipo];
+                  return (
+                    <Link key={session.id} to="/programa"
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface2 transition-colors group">
+                      {type && (
+                        <div className={clsx("w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0", type.badge)}>
+                          {type.icon}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-muted">{programLabel}</p>
+                        <p className="text-sm font-semibold truncate">{routine?.titulo || type?.label || session.tipo}</p>
+                      </div>
+                      <ChevronRight size={14} className="text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+            {upcoming.length === 0 && programRows.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-6 text-muted">
                 <CalendarX2 size={28} className="opacity-25" />
                 <p className="text-xs text-center">Sin rutinas agendadas<br />en los próximos días</p>
@@ -308,9 +369,9 @@ export function DashboardView({ routines, scheduledRoutines, completedExercises,
                 })}
               </div>
             )}
-            <Link to="/planificacion/calendario"
+            <Link to={programRows.length > 0 ? '/programa' : '/planificacion/calendario'}
               className="mt-3 flex items-center justify-center gap-1 text-xs text-primary hover:text-primary-hover font-semibold transition-colors border-t border-border pt-3">
-              Ver calendario <ChevronRight size={12} />
+              {programRows.length > 0 ? 'Ver programa' : 'Ver calendario'} <ChevronRight size={12} />
             </Link>
           </div>
 

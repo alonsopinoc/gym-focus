@@ -143,6 +143,9 @@ function RoutineCard({ routine, isExpanded, onToggle, onSelect, onEdit }) {
                 {ex.superset_id && (
                   <span className="text-[10px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded shrink-0">SS</span>
                 )}
+                {ex.es_extra && (
+                  <span className="text-[10px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded shrink-0">EXTRA</span>
+                )}
                 <span className="flex-1 text-sm">{ex.nombre}</span>
                 <div className="flex gap-1.5 shrink-0">
                   {ex.series && (

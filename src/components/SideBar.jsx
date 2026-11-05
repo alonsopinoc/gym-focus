@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Calendar, Dumbbell, BarChart3, Scale, Timer,
-  LogOut, User, Shield, BookOpen, Sun, Moon, ChevronLeft, ChevronRight,
+  LogOut, User, Shield, BookOpen, Sun, Moon, ChevronLeft, ChevronRight, ClipboardList,
 } from 'lucide-react';
 import { useTheme } from '../../ThemeContext.js';
 import { clsx } from 'clsx';
@@ -19,9 +19,10 @@ const NAV_GROUPS = [
   {
     label: 'Planificar',
     items: [
-      { to: '/planificacion/calendario', icon: Calendar,  label: 'Planificación' },
-      { to: '/progreso',                 icon: BarChart3, label: 'Progreso'      },
-      { to: '/metricas',                 icon: Scale,     label: 'Métricas'      },
+      { to: '/programa',                 icon: ClipboardList, label: 'Programa'   },
+      { to: '/planificacion/calendario', icon: Calendar,      label: 'Calendario' },
+      { to: '/progreso',                 icon: BarChart3,     label: 'Progreso'   },
+      { to: '/metricas',                 icon: Scale,         label: 'Métricas'   },
     ],
   },
 ];

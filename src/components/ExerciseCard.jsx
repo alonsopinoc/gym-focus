@@ -6,7 +6,7 @@ import { MinimalNumberInput } from './MinimalNumberInput';
 
 const ReactPlayer = lazy(() => import('react-player/youtube'));
 
-export function ExerciseCard({ exercise, exerciseId, isCompleted, onToggleComplete, logData, onLogChange }) {
+export function ExerciseCard({ exercise, exerciseId, isCompleted, onToggleComplete, logData, onLogChange, seriesLabel }) {
   const [expanded, setExpanded] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const navigate = useNavigate();
@@ -64,11 +64,15 @@ export function ExerciseCard({ exercise, exerciseId, isCompleted, onToggleComple
           {exercise.nombre}
         </span>
 
+        {exercise.es_extra && (
+          <span className="text-[10px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded shrink-0">EXTRA</span>
+        )}
+
         {/* Pills series/reps */}
         <div className="hidden sm:flex gap-1.5 shrink-0">
           {exercise.series && (
             <span className="text-xs bg-surface2 px-2 py-0.5 rounded-full font-medium">
-              {exercise.series}s
+              {seriesLabel || `${exercise.series}s`}
             </span>
           )}
           {exercise.reps && (
@@ -102,7 +106,7 @@ export function ExerciseCard({ exercise, exerciseId, isCompleted, onToggleComple
         <div className="sm:hidden flex gap-1.5 px-3 pb-2 -mt-1">
           {exercise.series && (
             <span className="text-xs bg-surface2 px-2 py-0.5 rounded-full font-medium">
-              {exercise.series} series
+              {seriesLabel || `${exercise.series} series`}
             </span>
           )}
           {exercise.reps && (
