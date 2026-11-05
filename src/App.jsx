@@ -79,6 +79,7 @@ function AppContent({ user }) {
   // los datos reales con el estado vacío inicial. Si la carga falla, no se guarda nada.
   const dataLoaded = React.useRef(false);
   const [loadedAt, setLoadedAt] = useState(0);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   // --- MANEJO DE AUTENTICACIÓN Y DATOS ---
   // AppContent solo se monta con sesión iniciada: al cerrar sesión se desmonta y su estado se descarta.
@@ -86,10 +87,21 @@ function AppContent({ user }) {
     if (!user) return;
     dataLoaded.current = false;
     let cancelled = false;
+    let retryTimer = null;
+    let attempt = 0;
 
-    // Carga paralela: userData + librería global al mismo tiempo
-    loadInitialData(user.uid).then(({ userData, library, globalRoutines }) => {
+    // Si Firestore no logra conectarse ("client is offline") y no hay copia local,
+    // la carga falla: se reintenta con espera creciente y al recuperar la red.
+    const scheduleRetry = () => {
+      clearTimeout(retryTimer);
+      retryTimer = setTimeout(load, Math.min(2000 * 2 ** attempt, 30000));
+      attempt += 1;
+    };
+    const retryNow = () => { if (!dataLoaded.current) { attempt = 0; scheduleRetry(); } };
+
+    const load = () => loadInitialData(user.uid).then(({ userData, library, globalRoutines }) => {
       if (cancelled) return;
+      setLoadFailed(false);
       // Rutinas: admin usa las globales si existen, usuarios normales usan las suyas
       if (isAdminEmail) {
         setRoutines(normalizeRoutines(globalRoutines || initialRoutines));
@@ -116,8 +128,20 @@ function AppContent({ user }) {
         { displayName: user.displayName, email: user.email, photoURL: user.photoURL, role: isAdminEmail ? 'admin' : (userData?.role || 'user') },
         { totalDays, totalExercises, lastWeight }
       );
-    }).catch(err => console.error("Error cargando datos:", err));
-    return () => { cancelled = true; };
+    }).catch(err => {
+      if (cancelled) return;
+      console.error("Error cargando datos:", err);
+      setLoadFailed(true);
+      scheduleRetry();
+    });
+
+    load();
+    window.addEventListener('online', retryNow);
+    return () => {
+      cancelled = true;
+      clearTimeout(retryTimer);
+      window.removeEventListener('online', retryNow);
+    };
   }, [user, isAdminEmail]);
 
   // --- EFECTOS PARA GUARDAR DATOS EN FIRESTORE ---
@@ -354,6 +378,11 @@ function AppContent({ user }) {
 
   return (
     <div className="flex h-screen bg-bg text-text">
+      {loadFailed && (
+        <div role="alert" className="fixed top-[env(safe-area-inset-top)] inset-x-0 z-[80] bg-danger text-white text-sm font-semibold text-center px-4 py-2">
+          Sin conexión con el servidor: tus datos no se cargaron y los cambios no se guardarán. Reintentando…
+        </div>
+      )}
       {/* SideBar para escritorio */}
       <div className="hidden md:flex">
         <SideBar user={user} role={userRole} timerState={{ isActive: false }} onLogout={logout} />
