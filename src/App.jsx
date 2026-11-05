@@ -150,7 +150,7 @@ function AppContent({ user }) {
     useEffect(() => {
       if (!user || !dataLoaded.current) return;
       const handler = setTimeout(() => {
-        saveUserData(user.uid, dataKey, data);
+        saveUserData(user.uid, dataKey, data).catch(err => console.error(`Error guardando ${dataKey}:`, err));
       }, delay);
       return () => clearTimeout(handler);
     }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -168,14 +168,14 @@ function AppContent({ user }) {
   // Guardar rutinas globales SOLO si es admin (debounce largo — cambian poco)
   useEffect(() => {
     if (!user || userRole !== 'admin' || !dataLoaded.current) return;
-    const handler = setTimeout(() => { saveGlobalRoutines(routines); }, 3000);
+    const handler = setTimeout(() => { saveGlobalRoutines(routines).catch(err => console.error('Error guardando rutinas:', err)); }, 3000);
     return () => clearTimeout(handler);
   }, [routines]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Guardar librería global SOLO si es admin
   useEffect(() => {
     if (!user || userRole !== 'admin' || !dataLoaded.current) return;
-    const handler = setTimeout(() => { saveGlobalLibrary(exerciseLibrary); }, 3000);
+    const handler = setTimeout(() => { saveGlobalLibrary(exerciseLibrary).catch(err => console.error('Error guardando librería:', err)); }, 3000);
     return () => clearTimeout(handler);
   }, [exerciseLibrary]); // eslint-disable-line react-hooks/exhaustive-deps
 

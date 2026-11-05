@@ -20,6 +20,9 @@ getAnalytics(app);
 // Después del primer login, la app carga instantáneamente desde el caché local
 // y sincroniza en segundo plano con Firebase.
 export const db = initializeFirestore(app, {
+  // Long polling en vez de streaming: algunas redes, proxies, VPN o antivirus cortan
+  // la conexión de streaming y los cambios quedaban pendientes sin llegar al servidor.
+  experimentalForceLongPolling: true,
   localCache: persistentLocalCache({
     tabManager: persistentMultipleTabManager()
   })
