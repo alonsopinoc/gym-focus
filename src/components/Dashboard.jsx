@@ -143,6 +143,9 @@ function RoutineCard({ routine, isExpanded, onToggle, onSelect, onEdit }) {
                 {ex.superset_id && (
                   <span className="text-[10px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded shrink-0">SS</span>
                 )}
+                {ex.es_extra && (
+                  <span className="text-[10px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded shrink-0">EXTRA</span>
+                )}
                 <span className="flex-1 text-sm">{ex.nombre}</span>
                 <div className="flex gap-1.5 shrink-0">
                   {ex.series && (
@@ -210,9 +213,9 @@ function CreateRoutineModal({ onClose, onCreate, library }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center"
+    <div className="fixed inset-0 bg-black/60 z-[70] flex items-end sm:items-center justify-center"
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-surface w-full sm:w-[480px] rounded-t-3xl sm:rounded-lg border-t sm:border border-border flex flex-col max-h-[90vh]">
+      <div className="bg-surface w-full sm:w-[480px] rounded-t-3xl sm:rounded-lg border-t sm:border border-border flex flex-col max-h-[90vh] pb-[env(safe-area-inset-bottom)] sm:pb-0">
 
         {/* ── Header modal ── */}
         {!showLib && (

@@ -1,7 +1,32 @@
 import { ArrowLeft, CheckCircle2, Circle, Timer, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
+import { useState } from 'react';
 import { ExerciseCard } from './ExerciseCard';
+import { CircuitWorkout } from './CircuitWorkout';
+import { dateKey } from '../program';
+import {
+  exerciseKey, getCircuitProgress, getCurrentRound, getRoundCount, getRoundInfo, getSeriesDone,
+  isCircuitAvailable, isExerciseFinished, toggleSeries,
+} from '../circuit';
+
+const MODE_STORAGE_KEY = 'workoutMode';
+
+function readSavedMode() {
+  try {
+    return localStorage.getItem(MODE_STORAGE_KEY) === 'circuit' ? 'circuit' : 'series';
+  } catch {
+    return 'series';
+  }
+}
+
+function saveMode(mode) {
+  try {
+    localStorage.setItem(MODE_STORAGE_KEY, mode);
+  } catch {
+    // Almacenamiento bloqueado: la elección solo dura mientras la pantalla siga abierta.
+  }
+}
 
 const ROUTINE_TYPES = {
   F:         { label: 'Fuerza',      badge: 'bg-blue-500'   },
@@ -14,9 +39,10 @@ const ROUTINE_TYPES = {
   B:         { label: 'Básico',      badge: 'bg-teal-500'   },
 };
 
-export function WorkoutView({ routine, onBack, completedExercises, onToggleComplete, exerciseLogs, onLogExercise }) {
+export function WorkoutView({ routine, onBack, onFinishSession, completedExercises, onToggleComplete, exerciseLogs, onLogExercise, circuitProgress, onToggleCircuitRound }) {
   const navigate = useNavigate();
-  const today    = new Date().toISOString().split('T')[0];
+  const [preferredMode, setPreferredMode] = useState(readSavedMode);
+  const today    = dateKey();
   const typeInfo = ROUTINE_TYPES[routine?.tipo];
 
   // Agrupar ejercicios por superset_id
@@ -37,9 +63,32 @@ export function WorkoutView({ routine, onBack, completedExercises, onToggleCompl
   // Lista plana de todos los ejercicios para el panel lateral
   const allExercises = routine.ejercicios.sort((a, b) => a.orden - b.orden);
   const completedToday = completedExercises[today] || [];
-  const completedCount = allExercises.filter(ex => completedToday.includes(`${routine.id}_ex${ex.orden}`)).length;
-  const totalCount     = allExercises.length;
+  const circuitAvailable = isCircuitAvailable(allExercises);
+  const isCircuit      = circuitAvailable && preferredMode === 'circuit';
+  const roundsToday    = circuitProgress?.[today]?.[routine.id] || {};
+  const seriesProgress = getCircuitProgress(allExercises, roundsToday, routine.id);
+  const completedCount = isCircuit
+    ? seriesProgress.done
+    : allExercises.filter(ex => completedToday.includes(`${routine.id}_ex${ex.orden}`)).length;
+  const totalCount     = isCircuit ? seriesProgress.total : allExercises.length;
   const progressPct    = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const roundInfo      = getRoundInfo(allExercises, getCurrentRound(allExercises, roundsToday, routine.id) ?? getRoundCount(allExercises));
+
+  const handleModeChange = (mode) => {
+    setPreferredMode(mode);
+    saveMode(mode);
+  };
+
+  // Un ejercicio queda completo, igual que por series, al terminar todas sus series.
+  const handleToggleRound = (exercise, series) => {
+    const key = exerciseKey(routine.id, exercise);
+    const wasFinished = isExerciseFinished(exercise, roundsToday, routine.id);
+    const isFinished = isExerciseFinished(exercise, toggleSeries(roundsToday, key, series), routine.id);
+    onToggleCircuitRound(routine.id, key, series);
+    if (wasFinished !== isFinished && completedToday.includes(key) !== isFinished) {
+      onToggleComplete(key);
+    }
+  };
 
   // Ejercicio con timer (si lo hay)
   const timerExercise = allExercises.find(ex => ex.es_timer && ex.timer_config);
@@ -88,16 +137,54 @@ export function WorkoutView({ routine, onBack, completedExercises, onToggleCompl
         {/* Progreso compacto en mobile */}
         <div className="md:hidden shrink-0 text-right">
           <span className="font-display-num text-2xl leading-none text-primary">{completedCount}/{totalCount}</span>
-          <p className="text-xs text-muted">ejerc.</p>
+          <p className="text-xs text-muted">{isCircuit ? 'series' : 'ejerc.'}</p>
         </div>
       </div>
+
+      {/* ── Sesión del programa ── */}
+      {onFinishSession && (
+        <div className="flex items-center justify-between gap-3 px-4 md:px-6 py-2.5 border-b border-border bg-primary/5 shrink-0">
+          <p className="text-xs font-semibold text-muted">Sesión de tu programa</p>
+          <button onClick={onFinishSession}
+            className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors">
+            <CheckCircle2 size={15} /> Terminar sesión
+          </button>
+        </div>
+      )}
 
       {/* ── Body: ejercicios + panel ── */}
       <div className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_320px] lg:grid-cols-[1fr_360px] overflow-hidden">
 
         {/* Columna izquierda: lista de ejercicios */}
         <div className="overflow-y-auto p-3 md:p-4 space-y-3">
-          {processedExercises.map((item) => {
+          {circuitAvailable && (
+            <div role="group" aria-label="Forma de hacer la rutina" className="flex gap-1 bg-surface2 rounded-lg p-1">
+              {[['series', 'Por series'], ['circuit', 'En circuito']].map(([mode, label]) => (
+                <button
+                  key={mode}
+                  onClick={() => handleModeChange(mode)}
+                  aria-pressed={(mode === 'circuit') === isCircuit}
+                  className={clsx(
+                    'flex-1 py-2 rounded-md text-sm font-semibold transition-colors',
+                    (mode === 'circuit') === isCircuit ? 'bg-surface text-text shadow-sm' : 'text-muted hover:text-text'
+                  )}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {isCircuit ? (
+            <CircuitWorkout
+              key={routine.id}
+              routineId={routine.id}
+              exercises={allExercises}
+              progress={roundsToday}
+              logsToday={logsToday}
+              onToggleRound={handleToggleRound}
+              onLogExercise={onLogExercise}
+            />
+          ) : processedExercises.map((item) => {
             if (item.isSuperset) {
               return (
                 <div key={item.id} className="rounded-lg border-2 border-dashed border-accent/40 p-4 space-y-3">
@@ -145,7 +232,9 @@ export function WorkoutView({ routine, onBack, completedExercises, onToggleCompl
             {/* Progreso */}
             <div className="bg-surface rounded-lg border border-border p-5">
               <div className="flex justify-between items-baseline mb-3">
-                <p className="text-sm font-semibold text-muted border-l-2 border-primary pl-2">Progreso</p>
+                <p className="text-sm font-semibold text-muted border-l-2 border-primary pl-2">
+                  {isCircuit ? `Series · ${roundInfo.isExtra ? 'extra' : 'vuelta'} ${roundInfo.series} de ${roundInfo.total}` : 'Progreso'}
+                </p>
                 <span className="font-display-num text-3xl leading-none text-primary">{completedCount}/{totalCount}</span>
               </div>
               {/* Barra */}
@@ -161,7 +250,7 @@ export function WorkoutView({ routine, onBack, completedExercises, onToggleCompl
               <div className="mt-3 space-y-1.5">
                 {allExercises.map(ex => {
                   const id   = `${routine.id}_ex${ex.orden}`;
-                  const done = completedToday.includes(id);
+                  const done = isCircuit ? isExerciseFinished(ex, roundsToday, routine.id) : completedToday.includes(id);
                   return (
                     <div key={ex.orden} className="flex items-center gap-2">
                       {done
@@ -169,11 +258,16 @@ export function WorkoutView({ routine, onBack, completedExercises, onToggleCompl
                         : <Circle size={13} className="text-muted shrink-0" />
                       }
                       <span className={clsx(
-                        "text-xs truncate",
+                        "text-xs truncate flex-1",
                         done ? "line-through text-muted" : "text-text"
                       )}>
                         {ex.nombre}
                       </span>
+                      {isCircuit && (
+                        <span className="text-[10px] font-semibold text-muted shrink-0">
+                          {getSeriesDone(ex, roundsToday, routine.id)}/{ex.series || 1}
+                        </span>
+                      )}
                     </div>
                   );
                 })}

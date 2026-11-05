@@ -6,6 +6,7 @@ import {
   CheckCircle2, CalendarX2, Dumbbell, Zap, HeartPulse, Star, Repeat,
   Weight, Target,
 } from 'lucide-react';
+import { getCurrentWeekIndex, getUpcomingSessions, parseDateKey } from '../program';
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
 
@@ -53,7 +54,12 @@ function buildGrid(year, month) {
 
 // ─── Panel de próximos entrenamientos ────────────────────────────────────────
 
-function UpcomingPanel({ routines, scheduledRoutines }) {
+function UpcomingPanel({ routines, scheduledRoutines, program }) {
+  const upcomingProgram = program ? getUpcomingSessions(program) : null;
+  const programLabel = !upcomingProgram ? ''
+    : upcomingProgram.isCurrentWeek ? 'Esta semana · cuando quieras'
+    : `Desde ${new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }).format(parseDateKey(upcomingProgram.startsOn))}`;
+  const programSessions = upcomingProgram?.sessions || [];
   const items = [];
   const today = new Date();
 
@@ -70,7 +76,7 @@ function UpcomingPanel({ routines, scheduledRoutines }) {
     items.push({ label, routine, key });
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && programSessions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center text-center p-8 gap-3 text-muted flex-1">
         <CalendarX2 size={36} className="opacity-25" />
@@ -83,6 +89,26 @@ function UpcomingPanel({ routines, scheduledRoutines }) {
 
   return (
     <div className="space-y-2 p-4 overflow-y-auto flex-1">
+      {programSessions.map((session) => {
+        const type = ROUTINE_TYPES[session.tipo];
+        const routine = routines.find(r => r.id === session.routineId);
+        return (
+          <Link
+            key={session.id}
+            to="/programa"
+            className="block bg-surface2 hover:bg-surface2/60 rounded-xl px-4 py-3 transition-colors"
+          >
+            <p className="text-xs font-semibold text-primary mb-0.5">{programLabel}</p>
+            <p className="font-semibold text-sm leading-snug">{routine?.titulo || type?.label || session.tipo}</p>
+            {type && (
+              <div className={clsx('inline-flex items-center gap-1 text-[11px] text-white font-medium px-2 py-0.5 rounded-full mt-1.5', type.badge)}>
+                {type.icon}
+                {type.label}
+              </div>
+            )}
+          </Link>
+        );
+      })}
       {items.map(({ label, routine, key }) => {
         const type = ROUTINE_TYPES[routine.tipo];
         return (
@@ -161,7 +187,7 @@ function RoutinePickItem({ routine, onSelect, expanded, onToggleExpand }) {
 
 // ─── Vista principal ──────────────────────────────────────────────────────────
 
-export function CalendarView({ routines, scheduledRoutines, onScheduleRoutine, onDeleteRoutine, completedDays, onToggleDayCompletion }) {
+export function CalendarView({ routines, scheduledRoutines, onScheduleRoutine, onDeleteRoutine, completedDays, onToggleDayCompletion, program }) {
   const today = new Date();
   const [viewYear,  setViewYear]  = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -222,7 +248,7 @@ export function CalendarView({ routines, scheduledRoutines, onScheduleRoutine, o
 
         {/* Cabecera días de la semana */}
         <div className="grid grid-cols-7 mb-1 border-b border-border pb-2">
-          {WEEKDAYS_MIN.map((d, i) => (
+          {WEEKDAYS_MIN.map(d => (
             <div key={d} className="text-center text-xs font-semibold text-muted sm:hidden">{d}</div>
           ))}
           {WEEKDAYS_FULL.map(d => (
@@ -239,6 +265,9 @@ export function CalendarView({ routines, scheduledRoutines, onScheduleRoutine, o
             const routine   = routines.find(r => r.id === scheduledRoutines[key]);
             const type      = routine ? ROUTINE_TYPES[routine.tipo] : null;
             const completed = !!completedDays[key];
+            const programWeek = program ? getCurrentWeekIndex(program, key) : -1;
+            const inProgram = program && programWeek >= 0 && programWeek < program.weeks.length;
+            const isProgramWeekStart = inProgram && (key === program.startDate || getCurrentWeekIndex(program, toKey(new Date(cell.date.getFullYear(), cell.date.getMonth(), cell.date.getDate() - 1))) !== programWeek);
 
             return (
               <button
@@ -248,10 +277,17 @@ export function CalendarView({ routines, scheduledRoutines, onScheduleRoutine, o
                   'relative flex flex-col items-stretch overflow-hidden rounded-md border transition-all min-h-[56px] sm:min-h-[72px] md:min-h-[84px]',
                   !cell.current && 'text-muted/30 bg-transparent border-transparent hover:bg-surface2/40',
                   cell.current && isSel && 'bg-primary text-white border-primary',
-                  cell.current && !isSel && isToday && 'bg-surface text-text border-primary hover:border-primary/70',
-                  cell.current && !isSel && !isToday && 'bg-surface text-text border-border hover:border-primary/40',
+                  cell.current && !isSel && isToday && 'text-text border-primary hover:border-primary/70',
+                  cell.current && !isSel && !isToday && 'text-text border-border hover:border-primary/40',
+                  cell.current && !isSel && (inProgram ? 'bg-primary/15' : 'bg-surface'),
                 )}
               >
+                {cell.current && isProgramWeekStart && (
+                  <span className={clsx('absolute top-1.5 left-1 text-[9px] font-bold leading-none', isSel ? 'text-white/80' : 'text-primary')}>
+                    S{programWeek + 1}
+                  </span>
+                )}
+
                 {/* Barra de color del tipo de rutina */}
                 {type && !isSel && (
                   <div className={clsx('h-1 w-full flex-shrink-0', type.dot)} />
@@ -293,12 +329,18 @@ export function CalendarView({ routines, scheduledRoutines, onScheduleRoutine, o
             <CheckCircle2 size={11} className="text-primary flex-shrink-0" />
             Completado
           </div>
+          {program && (
+            <div className="flex items-center gap-1.5 text-xs text-muted">
+              <div className="w-2.5 h-2.5 rounded-[2px] bg-primary/30 flex-shrink-0" />
+              Semana del programa (S1, S2…)
+            </div>
+          )}
         </div>
 
         {/* Próximos — sólo mobile */}
         <div className="md:hidden mt-6 border-t border-border pt-4">
           <p className="text-xs font-semibold text-muted mb-3 border-l-2 border-primary pl-2">Próximos entrenamientos</p>
-          <UpcomingPanel routines={routines} scheduledRoutines={scheduledRoutines} />
+          <UpcomingPanel routines={routines} scheduledRoutines={scheduledRoutines} program={program} />
         </div>
       </div>
 
@@ -307,17 +349,17 @@ export function CalendarView({ routines, scheduledRoutines, onScheduleRoutine, o
         <div className="px-4 py-4 border-b border-border">
           <p className="font-display text-lg">Próximos</p>
         </div>
-        <UpcomingPanel routines={routines} scheduledRoutines={scheduledRoutines} />
+        <UpcomingPanel routines={routines} scheduledRoutines={scheduledRoutines} program={program} />
       </div>
 
       {/* ── Modal / Bottom sheet ────────────────────────────── */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center"
+          className="fixed inset-0 bg-black/60 z-[70] flex items-end sm:items-center justify-center"
           onClick={e => e.target === e.currentTarget && setIsModalOpen(false)}
         >
           <div className={clsx(
-            'bg-surface w-full sm:w-[30rem] md:w-[36rem] rounded-t-3xl sm:rounded-lg border-t sm:border border-border p-6 max-h-[85vh] flex flex-col',
+            'bg-surface w-full sm:w-[30rem] md:w-[36rem] rounded-t-3xl sm:rounded-lg border-t sm:border border-border p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6 max-h-[85vh] flex flex-col',
             modalView !== 'details' && 'sm:h-[36rem]'
           )}>
 

@@ -1,10 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Calendar, Dumbbell, Timer, Shield, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, Dumbbell, Timer, Shield, BarChart3 } from 'lucide-react';
 import { clsx } from 'clsx';
 
 const NAV_ITEMS = [
   { to: '/',                       end: true, icon: LayoutDashboard, label: 'Inicio'    },
-  { to: '/planificacion/calendario',           icon: Calendar,        label: 'Plan'      },
+  { to: '/programa',                           icon: ClipboardList,   label: 'Programa'  },
   { to: '/rutinas',                            icon: Dumbbell,        label: 'Rutinas'   },
   { to: '/progreso',                           icon: BarChart3,       label: 'Progreso'  },
   { to: '/timer',                              icon: Timer,           label: 'Timer'     },

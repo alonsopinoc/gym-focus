@@ -1,5 +1,5 @@
 import { Bar } from 'react-chartjs-2';
-import { useTheme } from '../../ThemeContext.jsx';
+import { useTheme } from '../../ThemeContext.js';
 import {
   Chart as ChartJS, CategoryScale, LinearScale,
   BarElement, Title, Tooltip, Legend,

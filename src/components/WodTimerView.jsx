@@ -1,9 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Repeat, Zap, X, RefreshCw, ArrowLeft, Timer, Minus, Volume2, VolumeX } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { MinimalNumberInput } from './MinimalNumberInput';
-import { useTimer } from '../TimerContext.jsx';
+import { useTimer } from '../TimerContext.js';
 
 // Chips de selección de segundos
 const SecondsPicker = ({ value, onChange, options = [10, 15, 20, 30, 45, 60] }) => (
@@ -47,14 +47,12 @@ export function WodTimerView() {
   const location = useLocation();
   const initialRoutineConfig = location.state?.timerConfig;
   const navigate = useNavigate();
-  const subEjercicios = initialRoutineConfig?.sub_ejercicios;
-  const [showSubEjercicios, setShowSubEjercicios] = useState(false);
 
   const {
     screen, minimized, minimize, expand,
     timerType, setTimerType, config, setConfig,
     timeLeft, intervalTimeLeft, isActive, setIsActive, phase,
-    currentRound, currentInterval, totalTime, countdown,
+    currentRound, totalTime, countdown,
     volume, setVolume,
     handleStart, handleFinish, handleRestart, handleResetConfig, formatTime,
   } = useTimer();
@@ -100,7 +98,7 @@ export function WodTimerView() {
 
   if (screen === 'countdown') {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center z-50 text-text bg-bg pb-20 md:pb-0">
+      <div className="relative min-h-full flex flex-col items-center justify-center text-text bg-bg py-20 md:py-0 md:fixed md:inset-0 md:z-50">
         <div className="absolute top-6 right-6 flex items-center gap-2">
           <button onClick={handleMinimize} title="Minimizar"
             className="hidden md:flex p-2 bg-bg/10 rounded-full hover:bg-bg/20 transition-colors">
@@ -119,28 +117,11 @@ export function WodTimerView() {
     );
   }
 
-  const SubEjerciciosPanel = () => (
-    <div className="w-full md:w-80 bg-black/10 dark:bg-black/20 p-6 overflow-y-auto h-full">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-2xl font-bold">Ejercicios del WOD</h3>
-        <button onClick={() => setShowSubEjercicios(false)} className="md:hidden p-1 rounded-full hover:bg-black/20 hover:bg-bg/20"><X size={20} /></button>
-      </div>
-      <div className="space-y-4">
-        {subEjercicios.map((subEx, index) => (
-          <div key={index} className="bg-black/10 dark:bg-bg/10 p-3 rounded-md">
-            <p className="font-bold">{subEx.nombre}</p>
-            <p className="text-sm opacity-80">{subEx.reps}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
   if (screen === 'running') {
     const isRest = timerType === 'TABATA' && phase === 'REST';
     return (
       <div className={clsx(
-        "fixed inset-0 flex flex-col items-center justify-center z-50 transition-colors duration-500 px-6 pb-20 md:pb-0",
+        "relative min-h-full flex flex-col items-center justify-center transition-colors duration-500 px-6 py-20 md:py-0 md:fixed md:inset-0 md:z-50",
         isRest
           ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
           : 'bg-bg text-text',

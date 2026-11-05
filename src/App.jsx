@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate, useParams, NavLink, Outlet, Navigate } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate, useParams, Navigate } from 'react-router-dom';
 import { auth, logout } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { loadInitialData, saveUserData, saveGlobalRoutines, saveGlobalLibrary, saveUserProfile } from './userData';
@@ -13,15 +13,49 @@ import { ProgressView } from './components/ProgressView';
 import { BodyMetricsView } from './components/BodyMetricsView';
 import { DashboardView } from './components/DashboardView';
 import { WodTimerView } from './components/WodTimerView';
-import { ProgramCreator } from './components/ProgramCreator';
+import { ProgramView } from './components/ProgramView';
+import { buildProgram, dateKey, findSession, hasSessionDoneOn, markSessionDone, markSessionPending, setSessionRoutine, updateProgram } from './program';
+import { toggleSeries } from './circuit';
+import { normalizeRoutines } from './routineData';
 import { LoginPage } from './LoginPage';
 import initialRoutines from './data/rutinas_data.json';
 import { AdminUsersView } from './components/AdminUsersView';
 import { ExerciseLibraryManagerView } from './components/ExerciseLibraryManagerView';
 import { StudentDetailView } from './components/StudentDetailView';
 import initialLibrary from './data/ejercicios_library.json';
-import { TimerProvider } from './TimerContext.jsx';
+import { TimerProvider } from './TimerProvider.jsx';
 import { FloatingTimerWidget } from './components/FloatingTimerWidget';
+
+// Componentes Wrapper para manejar la obtención de la rutina desde la URL.
+// Viven fuera de AppContent para que React conserve su estado entre renders.
+function WorkoutViewWrapper({ routines, program, onBack, onFinishSession, ...props }) {
+  const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const routine = routines.find(r => r.id === id);
+  const sessionId = location.state?.programSessionId;
+  const session = findSession(program, sessionId);
+  const canFinishSession = session && !session.doneOn && session.routineId === id;
+
+  if (!routine) {
+    return <div className="p-6 text-sm text-muted">Rutina no encontrada.</div>;
+  }
+
+  return (
+    <WorkoutView
+      routine={routine}
+      onBack={sessionId ? () => navigate('/programa') : onBack}
+      onFinishSession={canFinishSession ? () => onFinishSession(sessionId) : undefined}
+      {...props}
+    />
+  );
+}
+
+function EditRoutineViewWrapper({ routines, ...props }) {
+  const { id } = useParams();
+  const routine = routines.find(r => r.id === id);
+  return <EditRoutineView routine={routine} {...props} />;
+}
 
 function AppContent({ user }) {
   // Calculamos el rol síncronamente desde el email para no bloquear el render
@@ -35,36 +69,31 @@ function AppContent({ user }) {
   const [bodyMetrics, setBodyMetrics] = useState([]);
   const [exerciseLogs, setExerciseLogs] = useState({});
   const [completedDays, setCompletedDays] = useState({});
+  const [program, setProgram] = useState(null);
+  const [circuitProgress, setCircuitProgress] = useState({});
   const [userRole, setUserRole] = useState(isAdminEmail ? 'admin' : 'user'); // Rol conocido síncronamente
 
   const [exerciseLibrary, setExerciseLibrary] = useState(initialLibrary);
-  const [selectedRoutine, setSelectedRoutine] = useState(null);
 
   // --- MANEJO DE AUTENTICACIÓN Y DATOS ---
+  // AppContent solo se monta con sesión iniciada: al cerrar sesión se desmonta y su estado se descarta.
   useEffect(() => {
-    if (!user) {
-      setRoutines(initialRoutines);
-      setScheduledRoutines({});
-      setCompletedExercises({});
-      setBodyMetrics([]);
-      setCompletedDays({});
-      setExerciseLogs({});
-      setUserRole('user');
-      return;
-    }
+    if (!user) return;
 
     // Carga paralela: userData + librería global al mismo tiempo
     loadInitialData(user.uid).then(({ userData, library, globalRoutines }) => {
       // Rutinas: admin usa las globales si existen, usuarios normales usan las suyas
       if (isAdminEmail) {
-        setRoutines(globalRoutines || initialRoutines);
+        setRoutines(normalizeRoutines(globalRoutines || initialRoutines));
       } else {
-        setRoutines(globalRoutines || userData?.routines || initialRoutines);
+        setRoutines(normalizeRoutines(globalRoutines || userData?.routines || initialRoutines));
       }
       setScheduledRoutines(userData?.scheduledRoutines || {});
       setCompletedExercises(userData?.completedExercises || {});
       setBodyMetrics(userData?.bodyMetrics || []);
       setCompletedDays(userData?.completedDays || {});
+      setProgram(userData?.program || null);
+      setCircuitProgress(userData?.circuitProgress || {});
       if (!isAdminEmail) setUserRole(userData?.role || 'user');
       if (library) setExerciseLibrary(library);
 
@@ -78,7 +107,7 @@ function AppContent({ user }) {
         { totalDays, totalExercises, lastWeight }
       );
     }).catch(err => console.error("Error cargando datos:", err));
-  }, [user]);
+  }, [user, isAdminEmail]);
 
   // --- EFECTOS PARA GUARDAR DATOS EN FIRESTORE ---
   // Usa useRef para detectar si ya se cargaron los datos (evita guardar en el primer render)
@@ -108,6 +137,8 @@ function AppContent({ user }) {
   useDebouncedSave('bodyMetrics', bodyMetrics);
   useDebouncedSave('completedDays', completedDays);
   useDebouncedSave('exerciseLogs', exerciseLogs);
+  useDebouncedSave('program', program);
+  useDebouncedSave('circuitProgress', circuitProgress);
   useDebouncedSave('role', userRole);
 
   // Guardar rutinas globales SOLO si es admin (debounce largo — cambian poco)
@@ -127,19 +158,16 @@ function AppContent({ user }) {
   const navigate = useNavigate();
 
   const handleSelectRoutine = (routine) => {
-    setSelectedRoutine(routine);
     // Navegamos a una ruta específica para la rutina
     navigate(`/rutina/${routine.id}`);
   };
 
   const handleBackToDashboard = () => {
-    setSelectedRoutine(null);
     navigate('/rutinas');
   };
 
   const handleEditRoutine = (routine) => {
     if (userRole !== 'admin') return; // Protección extra
-    setSelectedRoutine(routine);
     navigate(`/rutina/editar/${routine.id}`);
   };
 
@@ -191,41 +219,55 @@ function AppContent({ user }) {
     setRoutines(initialRoutines);
   };
 
-  const handleApplyProgram = (program, startDate, startDayOfWeek) => {
-    const newScheduledRoutines = {};
-    let currentDate = new Date(startDate);
+  // --- PROGRAMA SEMANAL ---
+  const handleCreateProgram = (draft, startDate) => {
+    setProgram(buildProgram(draft, dateKey(startDate), routines));
+  };
 
-    program.semanas.forEach(weekData => {
-      // Ajustar la fecha de inicio de la semana al día seleccionado (ej. Lunes)
-      while (currentDate.getDay() !== startDayOfWeek) {
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
+  const handleUpdateProgram = (draft, startDate) => {
+    setProgram(updateProgram(program, draft, dateKey(startDate), routines));
+  };
 
-      // Crear una lista de todas las rutinas a agendar en la semana
-      const weekRoutineQueue = [];
-      Object.entries(weekData.plan).forEach(([type, count]) => {
-        const availableRoutines = routines.filter(r => r.tipo === type);
-        if (availableRoutines.length === 0) return;
-        for (let i = 0; i < count; i++) {
-          // Ciclamos a través de las rutinas disponibles para no repetir siempre la misma
-          weekRoutineQueue.push(availableRoutines[i % availableRoutines.length]);
-        }
-      });
+  const handleStartSession = (sessionId) => {
+    const session = findSession(program, sessionId);
+    if (session?.routineId) {
+      navigate(`/rutina/${session.routineId}`, { state: { programSessionId: sessionId } });
+    }
+  };
 
-      // Para cada tipo de rutina en el plan de la semana...
-      weekRoutineQueue.forEach(routineToSchedule => {
-        // Saltar fines de semana
-        if (currentDate.getDay() === 0) currentDate.setDate(currentDate.getDate() + 1); // Si es Domingo, salta a Lunes
-        if (currentDate.getDay() === 6) currentDate.setDate(currentDate.getDate() + 2); // Si es Sábado, salta a Lunes
-        
-        const dateKey = currentDate.toISOString().split('T')[0];
-        newScheduledRoutines[dateKey] = routineToSchedule.id;
-        currentDate.setDate(currentDate.getDate() + 1);
-      });
+  // Registra la sesión en el programa y en el calendario del día en que se hizo.
+  const completeSession = (sessionId) => {
+    const session = findSession(program, sessionId);
+    if (!session?.routineId) return;
+    const today = dateKey();
+    setProgram(markSessionDone(program, sessionId, today));
+    setCompletedDays(prev => ({ ...prev, [today]: true }));
+    setScheduledRoutines(prev => ({ ...prev, [today]: session.routineId }));
+  };
+
+  const handleFinishSession = (sessionId) => {
+    completeSession(sessionId);
+    navigate('/programa');
+  };
+
+  const handleUndoSession = (sessionId) => {
+    const session = findSession(program, sessionId);
+    if (!session?.doneOn) return;
+    const updatedProgram = markSessionPending(program, sessionId);
+    setProgram(updatedProgram);
+    if (hasSessionDoneOn(updatedProgram, session.doneOn)) return;
+
+    setCompletedDays(prev => {
+      const next = { ...prev };
+      delete next[session.doneOn];
+      return next;
     });
-
-    setScheduledRoutines(prev => ({ ...prev, ...newScheduledRoutines }));
-    navigate('/'); // Volver al calendario para ver el resultado
+    setScheduledRoutines(prev => {
+      if (prev[session.doneOn] !== session.routineId) return prev;
+      const next = { ...prev };
+      delete next[session.doneOn];
+      return next;
+    });
   };
 
   const handleToggleDayCompletion = (date) => {
@@ -249,8 +291,19 @@ function AppContent({ user }) {
     setBodyMetrics(prev => prev.filter(m => m.id !== metricId));
   };
 
+  const handleToggleCircuitRound = (routineId, exerciseId, round) => {
+    const today = dateKey();
+    setCircuitProgress(prev => ({
+      ...prev,
+      [today]: {
+        ...prev[today],
+        [routineId]: toggleSeries(prev[today]?.[routineId], exerciseId, round),
+      },
+    }));
+  };
+
   const handleToggleComplete = (exerciseId) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = dateKey();
     setCompletedExercises(prev => {
       const todayCompleted = prev[today] || [];
       const newTodayCompleted = todayCompleted.includes(exerciseId)
@@ -266,7 +319,7 @@ function AppContent({ user }) {
   };
 
   const handleLogExercise = (exerciseId, data) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = dateKey();
     setExerciseLogs(prev => ({
       ...prev,
       [today]: {
@@ -293,45 +346,6 @@ function AppContent({ user }) {
     });
   };
 
-  // Componentes Wrapper para manejar la obtención de la rutina desde la URL
-  const WorkoutViewWrapper = () => {
-    const { id } = useParams();
-    const routine = routines.find(r => r.id === id);
-    return (
-      <WorkoutView 
-        routine={routine} 
-        onBack={handleBackToDashboard} 
-        completedExercises={completedExercises} 
-        onToggleComplete={handleToggleComplete}
-        exerciseLogs={exerciseLogs}
-        onLogExercise={handleLogExercise}
-      />
-    );
-  };
-
-  const EditRoutineViewWrapper = () => {
-    const { id } = useParams();
-    const routine = routines.find(r => r.id === id);
-    return <EditRoutineView routine={routine} exerciseLibrary={exerciseLibrary} onSave={handleUpdateRoutine} onCancel={handleCancelEdit} onDelete={handleDeleteRoutineById} />;
-  };
-
-  // Componente Layout para la sección de Planificación
-  const PlanningLayout = () => {
-    const activeTab = "border-b-2 border-primary text-primary text-text";
-    const inactiveTab = "text-muted";
-    return (
-      <div>
-        <div className="px-4 md:px-8 border-b border-border">
-          <nav className="flex gap-4">
-            <NavLink to="/planificacion/calendario" className={({isActive}) => `py-3 font-semibold ${isActive ? activeTab : inactiveTab}`}>Calendario</NavLink>
-            <NavLink to="/planificacion/programas" className={({isActive}) => `py-3 font-semibold ${isActive ? activeTab : inactiveTab}`}>Programas</NavLink>
-          </nav>
-        </div>
-        <Outlet />
-      </div>
-    );
-  };
-
   return (
     <div className="flex h-screen bg-bg text-text">
       {/* SideBar para escritorio */}
@@ -342,20 +356,19 @@ function AppContent({ user }) {
       {/* Contenido Principal */}
       <div className="flex-1 overflow-y-auto main-scroll-area md:ml-3">
         <Routes>
-          <Route path="/" element={<DashboardView routines={routines} scheduledRoutines={scheduledRoutines} completedExercises={completedExercises} bodyMetrics={bodyMetrics} completedDays={completedDays} user={user} onLogout={logout} />} />
-          <Route path="/planificacion" element={<PlanningLayout />}>
-            <Route index element={<Navigate to="calendario" />} />
-            <Route path="calendario" element={<CalendarView routines={routines} scheduledRoutines={scheduledRoutines} onScheduleRoutine={handleScheduleRoutine} onDeleteRoutine={handleDeleteRoutine} completedDays={completedDays} onToggleDayCompletion={handleToggleDayCompletion} />} />
-            <Route path="programas" element={<ProgramCreator onApplyProgram={handleApplyProgram} />} />
-          </Route>
+          <Route path="/" element={<DashboardView routines={routines} scheduledRoutines={scheduledRoutines} completedExercises={completedExercises} bodyMetrics={bodyMetrics} completedDays={completedDays} program={program} user={user} onLogout={logout} />} />
+          <Route path="/programa" element={<ProgramView program={program} routines={routines} onCreate={handleCreateProgram} onUpdate={handleUpdateProgram} onDelete={() => setProgram(null)} onStartSession={handleStartSession} onSelectRoutine={(sessionId, routineId) => setProgram(setSessionRoutine(program, sessionId, routineId))} onMarkDone={completeSession} onUndo={handleUndoSession} />} />
+          <Route path="/planificacion" element={<Navigate to="/planificacion/calendario" replace />} />
+          <Route path="/planificacion/calendario" element={<CalendarView routines={routines} scheduledRoutines={scheduledRoutines} onScheduleRoutine={handleScheduleRoutine} onDeleteRoutine={handleDeleteRoutine} completedDays={completedDays} onToggleDayCompletion={handleToggleDayCompletion} program={program} />} />
+          <Route path="/planificacion/programas" element={<Navigate to="/programa" replace />} />
           
           {/* Dashboard: Solo pasamos funciones de edición si es admin */}
           <Route path="/rutinas" element={<Dashboard routines={routines} exerciseLibrary={exerciseLibrary} onSelectRoutine={handleSelectRoutine} onEditRoutine={userRole === 'admin' ? handleEditRoutine : undefined} onCreateRoutine={userRole === 'admin' ? handleCreateRoutine : undefined} onResetRoutines={userRole === 'admin' ? handleResetRoutines : undefined} />} />
           
-          <Route path="/rutina/:id" element={<WorkoutViewWrapper />} />
+          <Route path="/rutina/:id" element={<WorkoutViewWrapper routines={routines} program={program} onFinishSession={handleFinishSession} circuitProgress={circuitProgress} onToggleCircuitRound={handleToggleCircuitRound} onBack={handleBackToDashboard} completedExercises={completedExercises} onToggleComplete={handleToggleComplete} exerciseLogs={exerciseLogs} onLogExercise={handleLogExercise} />} />
           
           {/* Ruta de Edición: Protegida a nivel de Router */}
-          <Route path="/rutina/editar/:id" element={userRole === 'admin' ? <EditRoutineViewWrapper /> : <Navigate to="/rutinas" />} />
+          <Route path="/rutina/editar/:id" element={userRole === 'admin' ? <EditRoutineViewWrapper routines={routines} exerciseLibrary={exerciseLibrary} onSave={handleUpdateRoutine} onCancel={handleCancelEdit} onDelete={handleDeleteRoutineById} /> :<Navigate to="/rutinas" />} />
           
           <Route path="/progreso" element={<ProgressView routines={routines} completedExercises={completedExercises} completedDays={completedDays} />} />
           <Route path="/metricas" element={<BodyMetricsView metrics={bodyMetrics} onAddMetric={handleAddMetric} onDeleteMetric={handleDeleteMetric} />} />

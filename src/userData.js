@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, getDocs, onSnapshot, query, limit, orderBy } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, onSnapshot, query, limit } from 'firebase/firestore';
 import { db } from './firebase';
 
 // ─── Datos completos del usuario ─────────────────────────────────────────────

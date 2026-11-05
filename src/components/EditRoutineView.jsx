@@ -5,6 +5,7 @@ import {
   BookOpen, X, Search, GripVertical, Edit2, Check,
 } from 'lucide-react';
 import { MinimalNumberInput } from './MinimalNumberInput';
+import { formatQuantity, MAX_REPS, parseReps, REPS_TYPES } from '../repsFormat';
 
 const ROUTINE_TYPES = {
   F:         { label: 'Fuerza',      badge: 'bg-blue-500' },
@@ -33,9 +34,9 @@ function LibraryPicker({ library, onSelect, onClose }) {
   });
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center"
+    <div className="fixed inset-0 bg-black/60 z-[70] flex items-end sm:items-center justify-center"
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-surface w-full sm:w-[460px] rounded-t-3xl sm:rounded-lg border-t sm:border border-border flex flex-col max-h-[80vh]">
+      <div className="bg-surface w-full sm:w-[460px] rounded-t-3xl sm:rounded-lg border-t sm:border border-border flex flex-col max-h-[80vh] pb-[env(safe-area-inset-bottom)] sm:pb-0">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0">
           <button onClick={onClose} className="p-1.5 rounded-full hover:bg-surface2 text-muted">
             <X size={16} />
@@ -81,9 +82,72 @@ function LibraryPicker({ library, onSelect, onClose }) {
   );
 }
 
+// ─── Selector de repeticiones: tipo y cantidad ─────────────────────────────────
+
+const CUSTOM_QUANTITY = '__custom__';
+const REPS_FIELD = 'min-w-0 bg-surface2 border border-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40';
+
+function RepsPicker({ value, onChange }) {
+  const [draft, setDraft] = useState(null); // Texto de la cantidad mientras se escribe a mano
+  const { type, quantity } = parseReps(value);
+  const typeInfo = REPS_TYPES.find(item => item.id === type);
+  const isCustomQuantity = quantity !== '' && !typeInfo.quantities?.includes(quantity);
+  const quantityField = clsx(REPS_FIELD, 'flex-1 sm:flex-none sm:w-28');
+
+  const handleTypeChange = (next) => {
+    onChange(next === 'max' ? MAX_REPS : REPS_TYPES.find(item => item.id === next).initial);
+  };
+
+  const handleQuantityChange = (next) => {
+    if (next === CUSTOM_QUANTITY) setDraft(quantity);
+    else onChange(formatQuantity(type, next));
+  };
+
+  const commitDraft = () => {
+    onChange(formatQuantity(type, draft));
+    setDraft(null);
+  };
+
+  return (
+    <div className="flex gap-1.5 w-full sm:w-auto">
+      <select value={type} aria-label="Tipo de repeticiones"
+        onChange={e => handleTypeChange(e.target.value)}
+        className={clsx(REPS_FIELD, 'flex-1 sm:flex-none sm:w-32')}>
+        {REPS_TYPES.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
+      </select>
+
+      {type === 'max' && (
+        <select disabled value="" aria-label="Cantidad" className={clsx(quantityField, 'opacity-50 cursor-not-allowed')}>
+          <option value="">—</option>
+        </select>
+      )}
+
+      {type !== 'max' && (draft !== null ? (
+        <input autoFocus type="text" value={draft} aria-label="Cantidad"
+          placeholder={type === 'reps' ? 'Ej: 12-15' : 'Ej: 90 segundos'}
+          onFocus={e => e.target.select()}
+          onChange={e => setDraft(e.target.value)}
+          onBlur={commitDraft}
+          onKeyDown={e => e.key === 'Enter' && e.target.blur()}
+          className={quantityField}
+        />
+      ) : (
+        <select value={quantity} aria-label="Cantidad"
+          onChange={e => handleQuantityChange(e.target.value)}
+          className={quantityField}>
+          <option value="">Cantidad…</option>
+          {isCustomQuantity && <option value={quantity}>{quantity}</option>}
+          {typeInfo.quantities.map(item => <option key={item} value={item}>{item}</option>)}
+          <option value={CUSTOM_QUANTITY}>{isCustomQuantity ? 'Editar cantidad…' : 'Escribir otra…'}</option>
+        </select>
+      ))}
+    </div>
+  );
+}
+
 // ─── Fila de ejercicio editable ────────────────────────────────────────────────
 
-function ExerciseRow({ ex, index, total, onChange, onDelete, onMoveUp, onMoveDown }) {
+function ExerciseRow({ ex, index, total, onChange, onDelete, onMoveUp, onMoveDown, onToggleExtra }) {
   const [expanded, setExpanded] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const nameRef = useRef(null);
@@ -97,7 +161,7 @@ function ExerciseRow({ ex, index, total, onChange, onDelete, onMoveUp, onMoveDow
       expanded ? "shadow-md" : "hover:shadow-sm"
     )}>
       {/* Fila principal */}
-      <div className="flex items-center gap-2 px-3 py-3">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-3">
         {/* Número + grip */}
         <div className="flex flex-col items-center gap-0.5 shrink-0 w-6">
           <button onClick={onMoveUp} disabled={index === 0}
@@ -132,16 +196,14 @@ function ExerciseRow({ ex, index, total, onChange, onDelete, onMoveUp, onMoveDow
         </div>
 
         {/* Series × Reps rápido */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <div className="w-14">
+        <div className="order-last w-full pl-8 lg:order-none lg:w-auto lg:pl-0 flex flex-wrap items-center gap-1.5 shrink-0">
+          <span className="text-xs text-muted">Series</span>
+          <div className="w-28">
             <MinimalNumberInput value={ex.series ?? ''} min={0}
               onChange={e => onChange('series', e.target.value)} />
           </div>
-          <span className="text-xs text-muted">×</span>
-          <input type="text" value={ex.reps ?? ''} placeholder="reps"
-            onChange={e => onChange('reps', e.target.value)}
-            className="w-16 bg-surface2 border border-border rounded-lg px-2 py-1.5 text-xs text-center focus:outline-none focus:ring-2 focus:ring-primary/40"
-          />
+          <span className="hidden sm:inline text-xs text-muted">×</span>
+          <RepsPicker value={ex.reps} onChange={value => onChange('reps', value)} />
         </div>
 
         {/* Expandir / borrar */}
@@ -174,8 +236,62 @@ function ExerciseRow({ ex, index, total, onChange, onDelete, onMoveUp, onMoveDow
               className="w-full bg-surface2 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
+          <button onClick={onToggleExtra}
+            className="text-xs font-semibold text-primary hover:underline">
+            {ex.es_extra ? 'Pasar a ejercicios' : 'Pasar a extra'}
+          </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Añadir ejercicio (desde la librería o escribiendo el nombre) ─────────────
+
+function AddExerciseControls({ onOpenLibrary, onAdd }) {
+  const [adding, setAdding] = useState(false);
+  const [name,   setName]   = useState('');
+
+  const submit = () => {
+    if (!name.trim()) return;
+    onAdd(name);
+    setName('');
+    setAdding(false);
+  };
+
+  if (!adding) {
+    return (
+      <div className="flex gap-2">
+        <button onClick={onOpenLibrary}
+          className="flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-border hover:border-primary hover:text-primary text-muted text-sm font-medium py-3 rounded-lg transition-colors">
+          <BookOpen size={15} /> Desde librería
+        </button>
+        <button onClick={() => setAdding(true)}
+          className="flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-border hover:border-primary hover:text-primary text-muted text-sm font-medium py-3 rounded-lg transition-colors">
+          <PlusCircle size={15} /> Escribir nombre
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-surface border border-border rounded-lg p-4 space-y-2.5">
+      <input autoFocus type="text" value={name}
+        onChange={e => setName(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && submit()}
+        placeholder="Nombre del ejercicio"
+        className="w-full bg-surface2 border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+      />
+      <div className="flex gap-2">
+        <button onClick={submit} disabled={!name.trim()}
+          className="flex-1 bg-primary disabled:opacity-40 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors">
+          Añadir
+        </button>
+        <button onClick={() => { setAdding(false); setName(''); }}
+          className="px-4 text-sm text-muted hover:text-text bg-surface2 rounded-xl border border-border">
+          Cancelar
+        </button>
+      </div>
     </div>
   );
 }
@@ -184,7 +300,7 @@ function ExerciseRow({ ex, index, total, onChange, onDelete, onMoveUp, onMoveDow
 
 function DeleteModal({ routineName, onConfirm, onCancel }) {
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+    <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center px-4">
       <div className="bg-surface border border-border rounded-lg p-6 w-full max-w-sm space-y-4">
         <h3 className="font-bold text-lg">Eliminar rutina</h3>
         <p className="text-sm text-muted">
@@ -209,24 +325,29 @@ function DeleteModal({ routineName, onConfirm, onCancel }) {
 
 export function EditRoutineView({ routine, exerciseLibrary, onSave, onCancel, onDelete }) {
   const [data,        setData]        = useState(routine);
-  const [showLib,     setShowLib]     = useState(false);
-  const [addingName,  setAddingName]  = useState(false);
-  const [newName,     setNewName]     = useState('');
+  const [libraryTarget, setLibraryTarget] = useState(null); // 'main' | 'extra' mientras la librería está abierta
   const [showDelete,  setShowDelete]  = useState(false);
   const [hasChanges,  setHasChanges]  = useState(false);
-  const newNameRef = useRef(null);
+  const [sharedSeries, setSharedSeries] = useState('');
 
-  useEffect(() => { setData(routine); setHasChanges(false); }, [routine]);
-  useEffect(() => { if (addingName) newNameRef.current?.focus(); }, [addingName]);
+  // Si cambia la rutina recibida, descartamos el borrador durante el render
+  const [prevRoutine, setPrevRoutine] = useState(routine);
+  if (routine !== prevRoutine) {
+    setPrevRoutine(routine);
+    setData(routine);
+    setHasChanges(false);
+    setSharedSeries('');
+  }
 
   const mutate = (updater) => {
     setData(updater);
     setHasChanges(true);
   };
 
-  // Reordena los órdenes tras cada movimiento
+  // Renumera tras cada cambio, con los extras siempre después de los ejercicios
   const reorder = (exercises) =>
-    exercises.map((ex, i) => ({ ...ex, orden: i + 1 }));
+    [...exercises.filter(ex => !ex.es_extra), ...exercises.filter(ex => ex.es_extra)]
+      .map((ex, i) => ({ ...ex, orden: i + 1 }));
 
   const handleExerciseChange = (order, field, value) => {
     mutate(prev => ({
@@ -235,22 +356,41 @@ export function EditRoutineView({ routine, exerciseLibrary, onSave, onCancel, on
     }));
   };
 
-  const handleMoveUp = (index) => {
+  // Mueve un ejercicio dentro de su sección; nunca cruza entre ejercicios y extras
+  const handleMove = (order, delta) => {
     mutate(prev => {
       const arr = [...prev.ejercicios].sort((a, b) => a.orden - b.orden);
-      if (index === 0) return prev;
-      [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+      const from = arr.findIndex(ex => ex.orden === order);
+      const to = from + delta;
+      if (!arr[to] || Boolean(arr[to].es_extra) !== Boolean(arr[from].es_extra)) return prev;
+      [arr[from], arr[to]] = [arr[to], arr[from]];
       return { ...prev, ejercicios: reorder(arr) };
     });
   };
 
-  const handleMoveDown = (index) => {
-    mutate(prev => {
-      const arr = [...prev.ejercicios].sort((a, b) => a.orden - b.orden);
-      if (index === arr.length - 1) return prev;
-      [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
-      return { ...prev, ejercicios: reorder(arr) };
-    });
+  // Los extras tienen su propia sección y conservan sus series
+  const handleApplySharedSeries = () => {
+    const series = Number(sharedSeries);
+    if (!series) return;
+    mutate(prev => ({
+      ...prev,
+      ejercicios: prev.ejercicios.map(ex => ex.es_extra ? ex : { ...ex, series }),
+    }));
+  };
+
+  const handleToggleExtra = (order) => {
+    mutate(prev => ({
+      ...prev,
+      ejercicios: reorder(
+        [...prev.ejercicios]
+          .sort((a, b) => a.orden - b.orden)
+          .map(ex => {
+            if (ex.orden !== order) return ex;
+            const { es_extra, ...rest } = ex;
+            return es_extra ? rest : { ...rest, es_extra: true };
+          })
+      ),
+    }));
   };
 
   const handleDeleteExercise = (order) => {
@@ -260,18 +400,20 @@ export function EditRoutineView({ routine, exerciseLibrary, onSave, onCancel, on
     }));
   };
 
-  const addExercise = (nombre) => {
+  const addExercise = (nombre, asExtra) => {
     if (!nombre.trim()) return;
     mutate(prev => {
       const nextOrder = prev.ejercicios.length > 0 ? Math.max(...prev.ejercicios.map(e => e.orden)) + 1 : 1;
+      const exercise = { orden: nextOrder, nombre: nombre.trim(), series: '', reps: '', nota: '', video_url: '', es_timer: false };
       return {
         ...prev,
-        ejercicios: [...prev.ejercicios, { orden: nextOrder, nombre: nombre.trim(), series: '', reps: '', nota: '', video_url: '', es_timer: false }],
+        ejercicios: reorder([
+          ...[...prev.ejercicios].sort((a, b) => a.orden - b.orden),
+          asExtra ? { ...exercise, es_extra: true } : exercise,
+        ]),
       };
     });
-    setNewName('');
-    setAddingName(false);
-    setShowLib(false);
+    setLibraryTarget(null);
   };
 
   const handleSave = () => {
@@ -280,7 +422,8 @@ export function EditRoutineView({ routine, exerciseLibrary, onSave, onCancel, on
 
   if (!data) return null;
 
-  const sorted   = [...data.ejercicios].sort((a, b) => a.orden - b.orden);
+  const sorted   = [...data.ejercicios].sort((a, b) => a.orden - b.orden).filter(ex => !ex.es_extra);
+  const extras   = [...data.ejercicios].sort((a, b) => a.orden - b.orden).filter(ex => ex.es_extra);
   const typeInfo = ROUTINE_TYPES[data.tipo] || { label: 'General', badge: 'bg-gray-400' };
 
   return (
@@ -347,6 +490,20 @@ export function EditRoutineView({ routine, exerciseLibrary, onSave, onCancel, on
             <p className="text-xs text-muted">Toca el nombre para editar</p>
           </div>
 
+          {sorted.length > 1 && (
+            <div className="bg-surface border border-border rounded-lg px-3 py-2.5 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-muted flex-1 min-w-[140px]">Misma cantidad de series para todos</span>
+              <div className="w-28">
+                <MinimalNumberInput value={sharedSeries} min={1} placeholder="-"
+                  onChange={e => setSharedSeries(e.target.value)} />
+              </div>
+              <button onClick={handleApplySharedSeries} disabled={!Number(sharedSeries)}
+                className="bg-primary hover:bg-primary-hover disabled:opacity-40 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors">
+                Aplicar
+              </button>
+            </div>
+          )}
+
           {sorted.length === 0 && (
             <div className="text-center py-8 text-muted text-sm">
               Sin ejercicios aún — añade uno abajo
@@ -361,44 +518,47 @@ export function EditRoutineView({ routine, exerciseLibrary, onSave, onCancel, on
               total={sorted.length}
               onChange={(field, value) => handleExerciseChange(ex.orden, field, value)}
               onDelete={() => handleDeleteExercise(ex.orden)}
-              onMoveUp={() => handleMoveUp(i)}
-              onMoveDown={() => handleMoveDown(i)}
+              onMoveUp={() => handleMove(ex.orden, -1)}
+              onMoveDown={() => handleMove(ex.orden, 1)}
+              onToggleExtra={() => handleToggleExtra(ex.orden)}
             />
           ))}
         </div>
 
         {/* Añadir ejercicio */}
-        {!addingName ? (
-          <div className="flex gap-2">
-            <button onClick={() => setShowLib(true)}
-              className="flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-border hover:border-primary hover:text-primary text-muted text-sm font-medium py-3 rounded-lg transition-colors">
-              <BookOpen size={15} /> Desde librería
-            </button>
-            <button onClick={() => setAddingName(true)}
-              className="flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-border hover:border-primary hover:text-primary text-muted text-sm font-medium py-3 rounded-lg transition-colors">
-              <PlusCircle size={15} /> Escribir nombre
-            </button>
+        <AddExerciseControls
+          onOpenLibrary={() => setLibraryTarget('main')}
+          onAdd={(nombre) => addExercise(nombre, false)}
+        />
+
+        {/* Extra */}
+        <div className="space-y-2 pt-4 border-t border-border">
+          <div>
+            <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+              Extra <span className="normal-case font-normal">({extras.length})</span>
+            </h2>
+            <p className="text-xs text-muted mt-0.5">Opcional. Se hace al final, después de todos los ejercicios.</p>
           </div>
-        ) : (
-          <div className="bg-surface border border-border rounded-lg p-4 space-y-2.5">
-            <input ref={newNameRef} type="text" value={newName}
-              onChange={e => setNewName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && addExercise(newName)}
-              placeholder="Nombre del ejercicio"
-              className="w-full bg-surface2 border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+
+          {extras.map((ex, i) => (
+            <ExerciseRow
+              key={ex.orden}
+              ex={ex}
+              index={i}
+              total={extras.length}
+              onChange={(field, value) => handleExerciseChange(ex.orden, field, value)}
+              onDelete={() => handleDeleteExercise(ex.orden)}
+              onMoveUp={() => handleMove(ex.orden, -1)}
+              onMoveDown={() => handleMove(ex.orden, 1)}
+              onToggleExtra={() => handleToggleExtra(ex.orden)}
             />
-            <div className="flex gap-2">
-              <button onClick={() => addExercise(newName)} disabled={!newName.trim()}
-                className="flex-1 bg-primary disabled:opacity-40 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors">
-                Añadir
-              </button>
-              <button onClick={() => { setAddingName(false); setNewName(''); }}
-                className="px-4 text-sm text-muted hover:text-text bg-surface2 rounded-xl border border-border">
-                Cancelar
-              </button>
-            </div>
-          </div>
-        )}
+          ))}
+
+          <AddExerciseControls
+            onOpenLibrary={() => setLibraryTarget('extra')}
+            onAdd={(nombre) => addExercise(nombre, true)}
+          />
+        </div>
 
         {/* Zona de peligro */}
         <div className="pt-4 border-t border-border">
@@ -411,11 +571,11 @@ export function EditRoutineView({ routine, exerciseLibrary, onSave, onCancel, on
       </div>
 
       {/* Modales */}
-      {showLib && (
+      {libraryTarget && (
         <LibraryPicker
           library={exerciseLibrary}
-          onSelect={addExercise}
-          onClose={() => setShowLib(false)}
+          onSelect={(nombre) => addExercise(nombre, libraryTarget === 'extra')}
+          onClose={() => setLibraryTarget(null)}
         />
       )}
       {showDelete && (
