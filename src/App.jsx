@@ -26,6 +26,8 @@ import { StudentDetailView } from './components/StudentDetailView';
 import initialLibrary from './data/ejercicios_library.json';
 import { TimerProvider } from './TimerProvider.jsx';
 import { FloatingTimerWidget } from './components/FloatingTimerWidget';
+import { WatchImportView } from './components/WatchImportView';
+import { workoutId } from './watchImport';
 
 // Componentes Wrapper para manejar la obtención de la rutina desde la URL.
 // Viven fuera de AppContent para que React conserve su estado entre renders.
@@ -72,6 +74,7 @@ function AppContent({ user }) {
   const [completedDays, setCompletedDays] = useState({});
   const [program, setProgram] = useState(null);
   const [circuitProgress, setCircuitProgress] = useState({});
+  const [workoutMetrics, setWorkoutMetrics] = useState({}); // Apple Watch, por id de entrenamiento
   const [userRole, setUserRole] = useState(isAdminEmail ? 'admin' : 'user'); // Rol conocido síncronamente
 
   const [exerciseLibrary, setExerciseLibrary] = useState(initialLibrary);
@@ -116,6 +119,7 @@ function AppContent({ user }) {
       setExerciseLogs(userData?.exerciseLogs || {});
       setProgram(userData?.program || null);
       setCircuitProgress(userData?.circuitProgress || {});
+      setWorkoutMetrics(userData?.workoutMetrics || {});
       if (!isAdminEmail) setUserRole(userData?.role || 'user');
       if (library) setExerciseLibrary(library);
       setLoadedAt(Date.now());
@@ -177,6 +181,7 @@ function AppContent({ user }) {
   useDebouncedSave('exerciseLogs', exerciseLogs);
   useDebouncedSave('program', program);
   useDebouncedSave('circuitProgress', circuitProgress);
+  useDebouncedSave('workoutMetrics', workoutMetrics);
   useDebouncedSave('role', userRole);
 
   // Guardar rutinas globales SOLO si es admin (debounce largo — cambian poco)
@@ -207,6 +212,7 @@ function AppContent({ user }) {
       exerciseLogs: setExerciseLogs,
       program: setProgram,
       circuitProgress: setCircuitProgress,
+      workoutMetrics: setWorkoutMetrics,
       ...(userRole === 'admin' && { routines: setRoutines, exerciseLibrary: setExerciseLibrary }),
     };
     Object.entries(saveQueue.readUnsaved()).forEach(([key, { value }]) => setters[key]?.(value));
@@ -274,6 +280,10 @@ function AppContent({ user }) {
     if (userRole !== 'admin') return;
     if (!window.confirm('Esto reemplaza TODAS las rutinas (para todos los alumnos) por las rutinas por defecto del código. ¿Continuar?')) return;
     setRoutines(initialRoutines);
+  };
+
+  const handleSaveWorkoutMetrics = (workout) => {
+    setWorkoutMetrics(prev => ({ ...prev, [workoutId(workout)]: workout }));
   };
 
   // --- PROGRAMA SEMANAL ---
@@ -427,14 +437,15 @@ function AppContent({ user }) {
           {/* Dashboard: Solo pasamos funciones de edición si es admin */}
           <Route path="/rutinas" element={<Dashboard routines={routines} exerciseLibrary={exerciseLibrary} onSelectRoutine={handleSelectRoutine} onEditRoutine={userRole === 'admin' ? handleEditRoutine : undefined} onCreateRoutine={userRole === 'admin' ? handleCreateRoutine : undefined} onResetRoutines={userRole === 'admin' ? handleResetRoutines : undefined} />} />
           
-          <Route path="/rutina/:id" element={<WorkoutViewWrapper routines={routines} program={program} onFinishSession={handleFinishSession} circuitProgress={circuitProgress} onToggleCircuitRound={handleToggleCircuitRound} onBack={handleBackToDashboard} completedExercises={completedExercises} onToggleComplete={handleToggleComplete} exerciseLogs={exerciseLogs} onLogExercise={handleLogExercise} />} />
+          <Route path="/rutina/:id" element={<WorkoutViewWrapper routines={routines} program={program} onFinishSession={handleFinishSession} circuitProgress={circuitProgress} onToggleCircuitRound={handleToggleCircuitRound} onBack={handleBackToDashboard} completedExercises={completedExercises} onToggleComplete={handleToggleComplete} exerciseLogs={exerciseLogs} onLogExercise={handleLogExercise} workoutMetrics={workoutMetrics} />} />
           
           {/* Ruta de Edición: Protegida a nivel de Router */}
           <Route path="/rutina/editar/:id" element={userRole === 'admin' ? <EditRoutineViewWrapper routines={routines} exerciseLibrary={exerciseLibrary} onSave={handleUpdateRoutine} onCancel={handleCancelEdit} onDelete={handleDeleteRoutineById} /> :<Navigate to="/rutinas" />} />
           
-          <Route path="/progreso" element={<ProgressView routines={routines} completedExercises={completedExercises} completedDays={completedDays} />} />
+          <Route path="/progreso" element={<ProgressView routines={routines} completedExercises={completedExercises} completedDays={completedDays} workoutMetrics={workoutMetrics} />} />
           <Route path="/metricas" element={<BodyMetricsView metrics={bodyMetrics} onAddMetric={handleAddMetric} onDeleteMetric={handleDeleteMetric} />} />
           <Route path="/timer" element={<WodTimerView />} />
+          <Route path="/importar" element={<WatchImportView routines={routines} scheduledRoutines={scheduledRoutines} program={program} completedExercises={completedExercises} workoutMetrics={workoutMetrics} isDataLoaded={loadedAt > 0} onSave={handleSaveWorkoutMetrics} />} />
           <Route path="/admin" element={userRole === 'admin' ? <AdminUsersView /> : <Navigate to="/" />} />
           <Route path="/admin/alumno/:uid" element={userRole === 'admin' ? <StudentDetailView routines={routines} /> : <Navigate to="/" />} />
           <Route path="/libreria" element={userRole === 'admin' ? <ExerciseLibraryManagerView library={exerciseLibrary} onUpdateLibrary={setExerciseLibrary} routines={routines} /> : <Navigate to="/" />} />

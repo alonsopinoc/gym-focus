@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { ExerciseCard } from './ExerciseCard';
 import { CircuitWorkout } from './CircuitWorkout';
 import { dateKey } from '../program';
+import { metricsForRoutine } from '../watchImport';
+import { WatchMetricsCard } from './WatchMetrics';
 import {
   exerciseKey, getCircuitProgress, getCurrentRound, getRoundCount, getRoundInfo, getSeriesDone,
   isCircuitAvailable, isExerciseFinished, toggleSeries,
@@ -39,7 +41,7 @@ const ROUTINE_TYPES = {
   B:         { label: 'Básico',      badge: 'bg-teal-500'   },
 };
 
-export function WorkoutView({ routine, onBack, onFinishSession, completedExercises, onToggleComplete, exerciseLogs, onLogExercise, circuitProgress, onToggleCircuitRound }) {
+export function WorkoutView({ routine, onBack, onFinishSession, completedExercises, onToggleComplete, exerciseLogs, onLogExercise, circuitProgress, onToggleCircuitRound, workoutMetrics }) {
   const navigate = useNavigate();
   const [preferredMode, setPreferredMode] = useState(readSavedMode);
   const today    = dateKey();
@@ -157,6 +159,7 @@ export function WorkoutView({ routine, onBack, onFinishSession, completedExercis
 
         {/* Columna izquierda: lista de ejercicios */}
         <div className="overflow-y-auto p-3 md:p-4 space-y-3">
+          <WatchMetricsCard workouts={metricsForRoutine(workoutMetrics, today, routine.id)} />
           {circuitAvailable && (
             <div role="group" aria-label="Forma de hacer la rutina" className="flex gap-1 bg-surface2 rounded-lg p-1">
               {[['series', 'Por series'], ['circuit', 'En circuito']].map(([mode, label]) => (
