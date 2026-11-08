@@ -1,6 +1,6 @@
 // Importación de métricas del Apple Watch. Un atajo de iOS lee los datos de Salud y abre
-// /importar#inicio=…&fin=…&kcal=…&fc_prom=…&fc_max=…; los datos van tras el "#", que el
-// navegador no envía a ningún servidor.
+// /importar#fin=…&duracion=…&kcal=…&fc_prom=…&fc_max=… (o inicio=… en vez de duracion).
+// Los datos van tras el "#", que el navegador no envía a ningún servidor.
 import { dateKey } from './program.js';
 
 // Atajos puede mandar "128,5", "128 lpm" o "350 kcal": se toma el primer número.
@@ -20,15 +20,18 @@ const round = (value) => (value === null ? null : Math.round(value));
 
 export function parseWatchHash(hash) {
   const params = new URLSearchParams(String(hash || '').replace(/^#/, ''));
-  const start = parseDate(params.get('inicio'));
   const end = parseDate(params.get('fin'));
+  const duration = parseNumber(params.get('duracion'));
+  // Sin inicio, se calcula desde el fin y la duración (el atajo no puede leer el entrenamiento).
+  const start = parseDate(params.get('inicio'))
+    ?? (end && duration > 0 ? new Date(end.getTime() - duration * 60000) : null);
   if (!start) return null;
 
   const durationFromDates = end ? (end - start) / 60000 : null;
   const workout = {
     start: start.toISOString(),
     end: end ? end.toISOString() : null,
-    durationMin: round(parseNumber(params.get('duracion')) ?? durationFromDates),
+    durationMin: round(duration ?? durationFromDates),
     kcal: round(parseNumber(params.get('kcal'))),
     hrAvg: round(parseNumber(params.get('fc_prom'))),
     hrMax: round(parseNumber(params.get('fc_max'))),
