@@ -3,6 +3,8 @@
 // localStorage (síncrono: la escritura de Firestore no alcanza a terminar si la página se
 // descarga) y lanza los guardados. La copia se borra cuando Firestore confirma; si no
 // alcanza, readUnsaved() la devuelve la próxima vez para aplicarla y guardarla de nuevo.
+// meta() (opcional) se guarda junto a la copia: p. ej. la versión sobre la que se hizo el
+// cambio, para descartarla si mientras tanto otro dispositivo guardó una más nueva.
 export function createSaveQueue(storageKey) {
   const pending = new Map();
 
@@ -38,18 +40,24 @@ export function createSaveQueue(storageKey) {
   };
 
   return {
-    schedule(key, value, save, delay) {
+    schedule(key, value, save, delay, meta) {
       clearTimeout(pending.get(key)?.timer);
-      pending.set(key, { value, save, timer: setTimeout(() => run(key), delay) });
+      pending.set(key, { value, save, meta, timer: setTimeout(() => run(key), delay) });
     },
     flush() {
       if (!pending.size) return;
       const unsaved = readUnsaved();
       const at = Date.now();
-      pending.forEach(({ value }, key) => { unsaved[key] = { value, at }; });
+      pending.forEach(({ value, meta }, key) => { unsaved[key] = { value, at, meta: meta?.() }; });
       writeUnsaved(unsaved);
       [...pending.keys()].forEach(run);
     },
     readUnsaved,
+    discardUnsaved(key) {
+      const unsaved = readUnsaved();
+      if (!(key in unsaved)) return;
+      delete unsaved[key];
+      writeUnsaved(unsaved);
+    },
   };
 }

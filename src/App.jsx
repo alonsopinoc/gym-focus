@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate, useParams, Navigate } from 'react-router-dom';
 import { auth, logout } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { loadInitialData, saveUserData, saveGlobalRoutines, saveGlobalLibrary, saveUserProfile } from './userData';
+import { loadInitialData, saveUserData, saveGlobalContent, StaleContentError, saveUserProfile } from './userData';
 import { Dashboard } from './components/Dashboard';
 import { WorkoutView } from './components/WorkoutView';
 import { CalendarView } from './components/CalendarView';
@@ -85,6 +85,13 @@ function AppContent({ user }) {
   const [loadedAt, setLoadedAt] = useState(0);
   const [loadFailed, setLoadFailed] = useState(false);
 
+  // Rutinas y librería globales: versión que tiene este dispositivo (ver saveGlobalContent)
+  // y la última lista que llegó del servidor, para no volver a guardarla tal cual.
+  const contentVersion = React.useRef({ routines: 0, exerciseLibrary: 0 });
+  const serverContent = React.useRef({});
+  const contentSaving = React.useRef({});
+  const [staleNotice, setStaleNotice] = useState(false);
+
   // --- MANEJO DE AUTENTICACIÓN Y DATOS ---
   // AppContent solo se monta con sesión iniciada: al cerrar sesión se desmonta y su estado se descarta.
   useEffect(() => {
@@ -106,12 +113,13 @@ function AppContent({ user }) {
     const load = () => loadInitialData(user.uid).then(({ userData, library, globalRoutines }) => {
       if (cancelled) return;
       setLoadFailed(false);
+      contentVersion.current = { routines: globalRoutines.version, exerciseLibrary: library.version };
       // Rutinas: admin usa las globales si existen, usuarios normales usan las suyas
-      if (isAdminEmail) {
-        setRoutines(normalizeRoutines(globalRoutines || initialRoutines));
-      } else {
-        setRoutines(normalizeRoutines(globalRoutines || userData?.routines || initialRoutines));
-      }
+      const loadedRoutines = normalizeRoutines(isAdminEmail
+        ? globalRoutines.list || initialRoutines
+        : globalRoutines.list || userData?.routines || initialRoutines);
+      serverContent.current = { routines: loadedRoutines, exerciseLibrary: library.list };
+      setRoutines(loadedRoutines);
       setScheduledRoutines(userData?.scheduledRoutines || {});
       setCompletedExercises(userData?.completedExercises || {});
       setBodyMetrics(userData?.bodyMetrics || []);
@@ -121,7 +129,7 @@ function AppContent({ user }) {
       setCircuitProgress(userData?.circuitProgress || {});
       setWorkoutMetrics(userData?.workoutMetrics || {});
       if (!isAdminEmail) setUserRole(userData?.role || 'user');
-      if (library) setExerciseLibrary(library);
+      if (library.list) setExerciseLibrary(library.list);
       setLoadedAt(Date.now());
 
       // Guardar perfil ligero para la lista de admin (fuera del render crítico)
@@ -184,16 +192,47 @@ function AppContent({ user }) {
   useDebouncedSave('workoutMetrics', workoutMetrics);
   useDebouncedSave('role', userRole);
 
-  // Guardar rutinas globales SOLO si es admin (debounce largo — cambian poco)
-  useEffect(() => {
+  // Guarda rutinas o librería globales (solo admin). Los guardados de una misma lista van
+  // uno tras otro para que cada uno parta de la versión que dejó el anterior. Si otro
+  // dispositivo guardó antes, se adopta lo del servidor y se avisa: el cambio local se pierde,
+  // pero nunca se pisa una versión más nueva con una más vieja.
+  const scheduleContentSave = (name, list, apply) => {
     if (!user || userRole !== 'admin' || !dataLoaded.current) return;
-    scheduleSave('routines', routines, () => saveGlobalRoutines(routines), 3000);
+    if (list === serverContent.current[name]) return;
+    const save = () => {
+      const previous = contentSaving.current[name] || Promise.resolve();
+      const current = previous.catch(() => {})
+        .then(() => saveGlobalContent(name, list, contentVersion.current[name]))
+        .then((version) => { contentVersion.current[name] = version; }, (err) => {
+          if (!(err instanceof StaleContentError)) throw err;
+          console.warn(err.message, '— se cargó la versión del servidor');
+          contentVersion.current[name] = err.server.version;
+          saveQueue.discardUnsaved(name);
+          if (err.server.list) {
+            const serverList = apply(err.server.list);
+            serverContent.current[name] = serverList;
+          }
+          setStaleNotice(true);
+        });
+      contentSaving.current[name] = current;
+      return current;
+    };
+    scheduleSave(name, list, save, 3000, () => ({ version: contentVersion.current[name] }));
+  };
+
+  useEffect(() => {
+    scheduleContentSave('routines', routines, (list) => {
+      const normalized = normalizeRoutines(list);
+      setRoutines(normalized);
+      return normalized;
+    });
   }, [routines]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Guardar librería global SOLO si es admin
   useEffect(() => {
-    if (!user || userRole !== 'admin' || !dataLoaded.current) return;
-    scheduleSave('exerciseLibrary', exerciseLibrary, () => saveGlobalLibrary(exerciseLibrary), 3000);
+    scheduleContentSave('exerciseLibrary', exerciseLibrary, (list) => {
+      setExerciseLibrary(list);
+      return list;
+    });
   }, [exerciseLibrary]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Va después de los guardados: en el render que trae lo cargado, esos efectos aún ven
@@ -215,7 +254,14 @@ function AppContent({ user }) {
       workoutMetrics: setWorkoutMetrics,
       ...(userRole === 'admin' && { routines: setRoutines, exerciseLibrary: setExerciseLibrary }),
     };
-    Object.entries(saveQueue.readUnsaved()).forEach(([key, { value }]) => setters[key]?.(value));
+    Object.entries(saveQueue.readUnsaved()).forEach(([key, { value, meta }]) => {
+      // Una copia de rutinas o librería hecha sobre otra versión quedó vieja: se descarta.
+      if (key in contentVersion.current && meta?.version !== contentVersion.current[key]) {
+        saveQueue.discardUnsaved(key);
+        return;
+      }
+      setters[key]?.(value);
+    });
   }, [loadedAt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const navigate = useNavigate();
@@ -415,6 +461,12 @@ function AppContent({ user }) {
 
   return (
     <div className="flex h-screen bg-bg text-text">
+      {staleNotice && (
+        <div role="alert" className="fixed top-[env(safe-area-inset-top)] inset-x-0 z-[80] bg-amber-500 text-white text-sm font-semibold px-4 py-2 flex items-center justify-center gap-3">
+          <span className="text-center">Las rutinas o la librería cambiaron en otro dispositivo: se cargó la versión más nueva y tu último cambio no se guardó.</span>
+          <button onClick={() => setStaleNotice(false)} aria-label="Cerrar aviso" className="shrink-0 px-2 py-0.5 rounded bg-white/20 hover:bg-white/30">✕</button>
+        </div>
+      )}
       {loadFailed && (
         <div role="alert" className="fixed top-[env(safe-area-inset-top)] inset-x-0 z-[80] bg-danger text-white text-sm font-semibold text-center px-4 py-2">
           Sin conexión con el servidor: tus datos no se cargaron y los cambios no se guardarán. Reintentando…

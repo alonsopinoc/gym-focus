@@ -27,9 +27,14 @@ service cloud.firestore {
     }
 
     // Rutinas y librería compartidas: todos las leen, solo el admin las cambia.
+    // Cada escritura debe subir la versión en uno (ver saveGlobalContent en userData.js):
+    // una pestaña o versión vieja de la app no puede pisar lo que guardó otro dispositivo.
     match /content/{docId} {
       allow read: if signedIn();
-      allow write: if isMasterAdmin();
+      allow create: if isMasterAdmin() && request.resource.data.version == 1;
+      allow update: if isMasterAdmin()
+        && request.resource.data.version == resource.data.get('version', 0) + 1;
+      allow delete: if false;
     }
   }
 }
