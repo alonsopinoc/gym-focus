@@ -1,6 +1,8 @@
 import { clsx } from 'clsx';
 import { CalendarDays, CheckCircle2, Flame, Dumbbell, Zap, HeartPulse, Star, Repeat } from 'lucide-react';
 import { WeeklyWorkoutChart } from './WeeklyWorkoutChart';
+import { metricsForRoutine } from '../watchImport';
+import { WatchStats } from './WatchMetrics';
 
 const ROUTINE_TYPES = {
   F:        { label: 'Fuerza',      badge: 'bg-blue-500'    },
@@ -26,7 +28,7 @@ function getStreak(completedDays) {
   return streak;
 }
 
-export function ProgressView({ routines, completedExercises, completedDays = {} }) {
+export function ProgressView({ routines, completedExercises, completedDays = {}, workoutMetrics = {} }) {
   const workoutsByDate = Object.entries(completedExercises)
     .map(([date, exerciseIds]) => {
       if (!exerciseIds?.length) return null;
@@ -105,8 +107,10 @@ export function ProgressView({ routines, completedExercises, completedDays = {} 
                         const type = routine?.tipo ? ROUTINE_TYPES[routine.tipo] : null;
                         const total = routine?.ejercicios?.length ?? 0;
                         const pct   = total > 0 ? Math.round((routine.completedCount / total) * 100) : 0;
+                        const watchWorkouts = metricsForRoutine(workoutMetrics, date, routine?.id);
                         return (
-                          <div key={routine?.id || routine?.titulo} className="px-4 py-3 flex items-center gap-3">
+                          <div key={routine?.id || routine?.titulo} className="px-4 py-3 space-y-2">
+                          <div className="flex items-center gap-3">
                             {type && (
                               <span className={clsx("text-[10px] font-bold text-white px-2 py-0.5 rounded-full shrink-0", type.badge)}>
                                 {type.label}
@@ -121,6 +125,8 @@ export function ProgressView({ routines, completedExercises, completedDays = {} 
                                 {routine.completedCount}/{total} ej.
                               </span>
                             </div>
+                          </div>
+                          {watchWorkouts.map((workout) => <WatchStats key={workout.start} workout={workout} compact />)}
                           </div>
                         );
                       })}

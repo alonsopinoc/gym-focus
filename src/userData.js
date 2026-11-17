@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, getDocs, onSnapshot, query, limit } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, onSnapshot, query, limit, runTransaction } from 'firebase/firestore';
 import { db } from './firebase';
 
 // ─── Datos completos del usuario ─────────────────────────────────────────────
@@ -11,7 +11,9 @@ export const loadUserData = async (userId) => {
 
 export const saveUserData = async (userId, dataKey, data) => {
   if (!userId) return;
-  await setDoc(doc(db, 'users', userId), { [dataKey]: data }, { merge: true });
+  // mergeFields reemplaza el campo completo: con merge:true los mapas se mezclan
+  // y lo que se borra localmente (p. ej. un ejercicio desmarcado) seguía en Firestore.
+  await setDoc(doc(db, 'users', userId), { [dataKey]: data }, { mergeFields: [dataKey] });
 };
 
 // ─── Perfil ligero (para lista de admin) ─────────────────────────────────────
@@ -51,24 +53,34 @@ export const subscribeToUserProfiles = (onCallback) => {
 };
 
 // ─── Contenido global ────────────────────────────────────────────────────────
+// Rutinas y librería llevan un número de versión. Cada guardado lee la versión del
+// servidor dentro de una transacción y solo escribe si es la misma que tenía este
+// dispositivo al cargar: así un dispositivo con una copia vieja no pisa una más nueva
+// (pasó con una copia de abril que borró las rutinas Kettlebell). Las reglas de
+// Firestore exigen además que cada escritura suba la versión en uno.
 
-export const loadGlobalRoutines = async () => {
-  const snap = await getDoc(doc(db, 'content', 'routines'));
-  return snap.exists() ? snap.data().list : null;
-};
+export class StaleContentError extends Error {
+  constructor(name, server) {
+    super(`content/${name} cambió en otro dispositivo`);
+    this.server = server; // { list, version } vigente en el servidor
+  }
+}
 
-export const saveGlobalRoutines = async (routines) => {
-  await setDoc(doc(db, 'content', 'routines'), { list: routines });
-};
+const readContent = (snap) => (snap.exists()
+  ? { list: snap.data().list ?? null, version: snap.data().version ?? 0 }
+  : { list: null, version: 0 });
 
-export const loadGlobalLibrary = async () => {
-  const snap = await getDoc(doc(db, 'content', 'exerciseLibrary'));
-  return snap.exists() ? snap.data().list : null;
-};
+const loadGlobalContent = async (name) => readContent(await getDoc(doc(db, 'content', name)));
 
-export const saveGlobalLibrary = async (library) => {
-  await setDoc(doc(db, 'content', 'exerciseLibrary'), { list: library });
-};
+// Devuelve la nueva versión, o lanza StaleContentError si el servidor ya tenía otra.
+export const saveGlobalContent = (name, list, baseVersion) => runTransaction(db, async (transaction) => {
+  const ref = doc(db, 'content', name);
+  const server = readContent(await transaction.get(ref));
+  if (server.version !== baseVersion) throw new StaleContentError(name, server);
+  const version = baseVersion + 1;
+  transaction.set(ref, { list, version, updatedAt: Date.now() });
+  return version;
+});
 
 // ─── Carga inicial paralela ───────────────────────────────────────────────────
 // Lanza userData + librería + rutinas globales en paralelo → más rápido
@@ -76,8 +88,8 @@ export const saveGlobalLibrary = async (library) => {
 export const loadInitialData = async (userId) => {
   const [userData, library, globalRoutines] = await Promise.all([
     loadUserData(userId),
-    loadGlobalLibrary(),
-    loadGlobalRoutines(),
+    loadGlobalContent('exerciseLibrary'),
+    loadGlobalContent('routines'),
   ]);
   return { userData, library, globalRoutines };
 };

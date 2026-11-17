@@ -20,6 +20,8 @@ getAnalytics(app);
 // Después del primer login, la app carga instantáneamente desde el caché local
 // y sincroniza en segundo plano con Firebase.
 export const db = initializeFirestore(app, {
+  // Un campo undefined (p. ej. un ejercicio sin reps) hacía rechazar el documento entero.
+  ignoreUndefinedProperties: true,
   localCache: persistentLocalCache({
     tabManager: persistentMultipleTabManager()
   })

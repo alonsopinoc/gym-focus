@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate, useParams, Navigate } from 'react-router-dom';
 import { auth, logout } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { loadInitialData, saveUserData, saveGlobalRoutines, saveGlobalLibrary, saveUserProfile } from './userData';
+import { loadInitialData, saveUserData, saveGlobalContent, StaleContentError, saveUserProfile } from './userData';
 import { Dashboard } from './components/Dashboard';
 import { WorkoutView } from './components/WorkoutView';
 import { CalendarView } from './components/CalendarView';
@@ -17,6 +17,7 @@ import { ProgramView } from './components/ProgramView';
 import { buildProgram, dateKey, findSession, hasSessionDoneOn, markSessionDone, markSessionPending, setSessionRoutine, updateProgram } from './program';
 import { toggleSeries } from './circuit';
 import { normalizeRoutines } from './routineData';
+import { createSaveQueue } from './saveQueue';
 import { LoginPage } from './LoginPage';
 import initialRoutines from './data/rutinas_data.json';
 import { AdminUsersView } from './components/AdminUsersView';
@@ -25,6 +26,8 @@ import { StudentDetailView } from './components/StudentDetailView';
 import initialLibrary from './data/ejercicios_library.json';
 import { TimerProvider } from './TimerProvider.jsx';
 import { FloatingTimerWidget } from './components/FloatingTimerWidget';
+import { WatchImportView } from './components/WatchImportView';
+import { workoutId } from './watchImport';
 
 // Componentes Wrapper para manejar la obtención de la rutina desde la URL.
 // Viven fuera de AppContent para que React conserve su estado entre renders.
@@ -71,31 +74,63 @@ function AppContent({ user }) {
   const [completedDays, setCompletedDays] = useState({});
   const [program, setProgram] = useState(null);
   const [circuitProgress, setCircuitProgress] = useState({});
+  const [workoutMetrics, setWorkoutMetrics] = useState({}); // Apple Watch, por id de entrenamiento
   const [userRole, setUserRole] = useState(isAdminEmail ? 'admin' : 'user'); // Rol conocido síncronamente
 
   const [exerciseLibrary, setExerciseLibrary] = useState(initialLibrary);
+
+  // Solo se guarda después de cargar lo que hay en Firestore: guardar antes reemplazaría
+  // los datos reales con el estado vacío inicial. Si la carga falla, no se guarda nada.
+  const dataLoaded = React.useRef(false);
+  const [loadedAt, setLoadedAt] = useState(0);
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  // Rutinas y librería globales: versión que tiene este dispositivo (ver saveGlobalContent)
+  // y la última lista que llegó del servidor, para no volver a guardarla tal cual.
+  const contentVersion = React.useRef({ routines: 0, exerciseLibrary: 0 });
+  const serverContent = React.useRef({});
+  const contentSaving = React.useRef({});
+  const [staleNotice, setStaleNotice] = useState(false);
 
   // --- MANEJO DE AUTENTICACIÓN Y DATOS ---
   // AppContent solo se monta con sesión iniciada: al cerrar sesión se desmonta y su estado se descarta.
   useEffect(() => {
     if (!user) return;
+    dataLoaded.current = false;
+    let cancelled = false;
+    let retryTimer = null;
+    let attempt = 0;
 
-    // Carga paralela: userData + librería global al mismo tiempo
-    loadInitialData(user.uid).then(({ userData, library, globalRoutines }) => {
+    // Si Firestore no logra conectarse ("client is offline") y no hay copia local,
+    // la carga falla: se reintenta con espera creciente y al recuperar la red.
+    const scheduleRetry = () => {
+      clearTimeout(retryTimer);
+      retryTimer = setTimeout(load, Math.min(2000 * 2 ** attempt, 30000));
+      attempt += 1;
+    };
+    const retryNow = () => { if (!dataLoaded.current) { attempt = 0; scheduleRetry(); } };
+
+    const load = () => loadInitialData(user.uid).then(({ userData, library, globalRoutines }) => {
+      if (cancelled) return;
+      setLoadFailed(false);
+      contentVersion.current = { routines: globalRoutines.version, exerciseLibrary: library.version };
       // Rutinas: admin usa las globales si existen, usuarios normales usan las suyas
-      if (isAdminEmail) {
-        setRoutines(normalizeRoutines(globalRoutines || initialRoutines));
-      } else {
-        setRoutines(normalizeRoutines(globalRoutines || userData?.routines || initialRoutines));
-      }
+      const loadedRoutines = normalizeRoutines(isAdminEmail
+        ? globalRoutines.list || initialRoutines
+        : globalRoutines.list || userData?.routines || initialRoutines);
+      serverContent.current = { routines: loadedRoutines, exerciseLibrary: library.list };
+      setRoutines(loadedRoutines);
       setScheduledRoutines(userData?.scheduledRoutines || {});
       setCompletedExercises(userData?.completedExercises || {});
       setBodyMetrics(userData?.bodyMetrics || []);
       setCompletedDays(userData?.completedDays || {});
+      setExerciseLogs(userData?.exerciseLogs || {});
       setProgram(userData?.program || null);
       setCircuitProgress(userData?.circuitProgress || {});
+      setWorkoutMetrics(userData?.workoutMetrics || {});
       if (!isAdminEmail) setUserRole(userData?.role || 'user');
-      if (library) setExerciseLibrary(library);
+      if (library.list) setExerciseLibrary(library.list);
+      setLoadedAt(Date.now());
 
       // Guardar perfil ligero para la lista de admin (fuera del render crítico)
       const totalDays      = Object.keys(userData?.completedDays || {}).length;
@@ -106,31 +141,46 @@ function AppContent({ user }) {
         { displayName: user.displayName, email: user.email, photoURL: user.photoURL, role: isAdminEmail ? 'admin' : (userData?.role || 'user') },
         { totalDays, totalExercises, lastWeight }
       );
-    }).catch(err => console.error("Error cargando datos:", err));
+    }).catch(err => {
+      if (cancelled) return;
+      console.error("Error cargando datos:", err);
+      setLoadFailed(true);
+      scheduleRetry();
+    });
+
+    load();
+    window.addEventListener('online', retryNow);
+    return () => {
+      cancelled = true;
+      clearTimeout(retryTimer);
+      window.removeEventListener('online', retryNow);
+    };
   }, [user, isAdminEmail]);
 
   // --- EFECTOS PARA GUARDAR DATOS EN FIRESTORE ---
-  // Usa useRef para detectar si ya se cargaron los datos (evita guardar en el primer render)
-  const dataLoaded = React.useRef(false);
-  useEffect(() => { if (user) dataLoaded.current = false; }, [user]);
+
+  // Ver saveQueue.js: agrupa los guardados y no los pierde si la app se cierra antes.
+  const [saveQueue] = useState(() => createSaveQueue(`gymfocus_sin_guardar_${user.uid}`));
+  const scheduleSave = saveQueue.schedule;
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') saveQueue.flush();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pagehide', saveQueue.flush);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pagehide', saveQueue.flush);
+    };
+  }, [saveQueue]);
 
   const useDebouncedSave = (dataKey, data, delay = 2000) => {
     useEffect(() => {
       if (!user || !dataLoaded.current) return;
-      const handler = setTimeout(() => {
-        saveUserData(user.uid, dataKey, data);
-      }, delay);
-      return () => clearTimeout(handler);
+      scheduleSave(dataKey, data, () => saveUserData(user.uid, dataKey, data), delay);
     }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
   };
-
-  // Marcamos datos como cargados después del efecto de carga
-  useEffect(() => {
-    if (user) {
-      const t = setTimeout(() => { dataLoaded.current = true; }, 3000);
-      return () => clearTimeout(t);
-    }
-  }, [user]);
 
   useDebouncedSave('scheduledRoutines', scheduledRoutines);
   useDebouncedSave('completedExercises', completedExercises);
@@ -139,21 +189,80 @@ function AppContent({ user }) {
   useDebouncedSave('exerciseLogs', exerciseLogs);
   useDebouncedSave('program', program);
   useDebouncedSave('circuitProgress', circuitProgress);
+  useDebouncedSave('workoutMetrics', workoutMetrics);
   useDebouncedSave('role', userRole);
 
-  // Guardar rutinas globales SOLO si es admin (debounce largo — cambian poco)
-  useEffect(() => {
+  // Guarda rutinas o librería globales (solo admin). Los guardados de una misma lista van
+  // uno tras otro para que cada uno parta de la versión que dejó el anterior. Si otro
+  // dispositivo guardó antes, se adopta lo del servidor y se avisa: el cambio local se pierde,
+  // pero nunca se pisa una versión más nueva con una más vieja.
+  const scheduleContentSave = (name, list, apply) => {
     if (!user || userRole !== 'admin' || !dataLoaded.current) return;
-    const handler = setTimeout(() => { saveGlobalRoutines(routines); }, 3000);
-    return () => clearTimeout(handler);
+    if (list === serverContent.current[name]) return;
+    const save = () => {
+      const previous = contentSaving.current[name] || Promise.resolve();
+      const current = previous.catch(() => {})
+        .then(() => saveGlobalContent(name, list, contentVersion.current[name]))
+        .then((version) => { contentVersion.current[name] = version; }, (err) => {
+          if (!(err instanceof StaleContentError)) throw err;
+          console.warn(err.message, '— se cargó la versión del servidor');
+          contentVersion.current[name] = err.server.version;
+          saveQueue.discardUnsaved(name);
+          if (err.server.list) {
+            const serverList = apply(err.server.list);
+            serverContent.current[name] = serverList;
+          }
+          setStaleNotice(true);
+        });
+      contentSaving.current[name] = current;
+      return current;
+    };
+    scheduleSave(name, list, save, 3000, () => ({ version: contentVersion.current[name] }));
+  };
+
+  useEffect(() => {
+    scheduleContentSave('routines', routines, (list) => {
+      const normalized = normalizeRoutines(list);
+      setRoutines(normalized);
+      return normalized;
+    });
   }, [routines]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Guardar librería global SOLO si es admin
   useEffect(() => {
-    if (!user || userRole !== 'admin' || !dataLoaded.current) return;
-    const handler = setTimeout(() => { saveGlobalLibrary(exerciseLibrary); }, 3000);
-    return () => clearTimeout(handler);
+    scheduleContentSave('exerciseLibrary', exerciseLibrary, (list) => {
+      setExerciseLibrary(list);
+      return list;
+    });
   }, [exerciseLibrary]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Va después de los guardados: en el render que trae lo cargado, esos efectos aún ven
+  // dataLoaded=false y no reescriben en Firestore lo que se acaba de leer.
+  useEffect(() => {
+    if (!loadedAt) return;
+    dataLoaded.current = true;
+
+    // Cambios que no alcanzaron a llegar a Firestore la última vez que se cerró la app:
+    // se aplican sobre lo cargado, y los efectos de arriba los vuelven a guardar.
+    const setters = {
+      scheduledRoutines: setScheduledRoutines,
+      completedExercises: setCompletedExercises,
+      bodyMetrics: setBodyMetrics,
+      completedDays: setCompletedDays,
+      exerciseLogs: setExerciseLogs,
+      program: setProgram,
+      circuitProgress: setCircuitProgress,
+      workoutMetrics: setWorkoutMetrics,
+      ...(userRole === 'admin' && { routines: setRoutines, exerciseLibrary: setExerciseLibrary }),
+    };
+    Object.entries(saveQueue.readUnsaved()).forEach(([key, { value, meta }]) => {
+      // Una copia de rutinas o librería hecha sobre otra versión quedó vieja: se descarta.
+      if (key in contentVersion.current && meta?.version !== contentVersion.current[key]) {
+        saveQueue.discardUnsaved(key);
+        return;
+      }
+      setters[key]?.(value);
+    });
+  }, [loadedAt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const navigate = useNavigate();
 
@@ -217,6 +326,10 @@ function AppContent({ user }) {
     if (userRole !== 'admin') return;
     if (!window.confirm('Esto reemplaza TODAS las rutinas (para todos los alumnos) por las rutinas por defecto del código. ¿Continuar?')) return;
     setRoutines(initialRoutines);
+  };
+
+  const handleSaveWorkoutMetrics = (workout) => {
+    setWorkoutMetrics(prev => ({ ...prev, [workoutId(workout)]: workout }));
   };
 
   // --- PROGRAMA SEMANAL ---
@@ -348,6 +461,17 @@ function AppContent({ user }) {
 
   return (
     <div className="flex h-screen bg-bg text-text">
+      {staleNotice && (
+        <div role="alert" className="fixed top-[env(safe-area-inset-top)] inset-x-0 z-[80] bg-amber-500 text-white text-sm font-semibold px-4 py-2 flex items-center justify-center gap-3">
+          <span className="text-center">Las rutinas o la librería cambiaron en otro dispositivo: se cargó la versión más nueva y tu último cambio no se guardó.</span>
+          <button onClick={() => setStaleNotice(false)} aria-label="Cerrar aviso" className="shrink-0 px-2 py-0.5 rounded bg-white/20 hover:bg-white/30">✕</button>
+        </div>
+      )}
+      {loadFailed && (
+        <div role="alert" className="fixed top-[env(safe-area-inset-top)] inset-x-0 z-[80] bg-danger text-white text-sm font-semibold text-center px-4 py-2">
+          Sin conexión con el servidor: tus datos no se cargaron y los cambios no se guardarán. Reintentando…
+        </div>
+      )}
       {/* SideBar para escritorio */}
       <div className="hidden md:flex">
         <SideBar user={user} role={userRole} timerState={{ isActive: false }} onLogout={logout} />
@@ -365,14 +489,15 @@ function AppContent({ user }) {
           {/* Dashboard: Solo pasamos funciones de edición si es admin */}
           <Route path="/rutinas" element={<Dashboard routines={routines} exerciseLibrary={exerciseLibrary} onSelectRoutine={handleSelectRoutine} onEditRoutine={userRole === 'admin' ? handleEditRoutine : undefined} onCreateRoutine={userRole === 'admin' ? handleCreateRoutine : undefined} onResetRoutines={userRole === 'admin' ? handleResetRoutines : undefined} />} />
           
-          <Route path="/rutina/:id" element={<WorkoutViewWrapper routines={routines} program={program} onFinishSession={handleFinishSession} circuitProgress={circuitProgress} onToggleCircuitRound={handleToggleCircuitRound} onBack={handleBackToDashboard} completedExercises={completedExercises} onToggleComplete={handleToggleComplete} exerciseLogs={exerciseLogs} onLogExercise={handleLogExercise} />} />
+          <Route path="/rutina/:id" element={<WorkoutViewWrapper routines={routines} program={program} onFinishSession={handleFinishSession} circuitProgress={circuitProgress} onToggleCircuitRound={handleToggleCircuitRound} onBack={handleBackToDashboard} completedExercises={completedExercises} onToggleComplete={handleToggleComplete} exerciseLogs={exerciseLogs} onLogExercise={handleLogExercise} workoutMetrics={workoutMetrics} />} />
           
           {/* Ruta de Edición: Protegida a nivel de Router */}
           <Route path="/rutina/editar/:id" element={userRole === 'admin' ? <EditRoutineViewWrapper routines={routines} exerciseLibrary={exerciseLibrary} onSave={handleUpdateRoutine} onCancel={handleCancelEdit} onDelete={handleDeleteRoutineById} /> :<Navigate to="/rutinas" />} />
           
-          <Route path="/progreso" element={<ProgressView routines={routines} completedExercises={completedExercises} completedDays={completedDays} />} />
+          <Route path="/progreso" element={<ProgressView routines={routines} completedExercises={completedExercises} completedDays={completedDays} workoutMetrics={workoutMetrics} />} />
           <Route path="/metricas" element={<BodyMetricsView metrics={bodyMetrics} onAddMetric={handleAddMetric} onDeleteMetric={handleDeleteMetric} />} />
           <Route path="/timer" element={<WodTimerView />} />
+          <Route path="/importar" element={<WatchImportView routines={routines} scheduledRoutines={scheduledRoutines} program={program} completedExercises={completedExercises} workoutMetrics={workoutMetrics} isDataLoaded={loadedAt > 0} onSave={handleSaveWorkoutMetrics} />} />
           <Route path="/admin" element={userRole === 'admin' ? <AdminUsersView /> : <Navigate to="/" />} />
           <Route path="/admin/alumno/:uid" element={userRole === 'admin' ? <StudentDetailView routines={routines} /> : <Navigate to="/" />} />
           <Route path="/libreria" element={userRole === 'admin' ? <ExerciseLibraryManagerView library={exerciseLibrary} onUpdateLibrary={setExerciseLibrary} routines={routines} /> : <Navigate to="/" />} />
